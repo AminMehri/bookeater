@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      # - "443:443"
+    volumes:
+      - backend_static_volume:/backend/static
+      - backend_media_volume:/backend/media
+    networks:
+      - nginx_network
+
+volumes:
+  backend_static_volume:
+    external: true
+  backend_media_volume:
+    external: true
+networks:
+  nginx_network:
+    external: true
