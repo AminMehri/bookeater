@@ -3,7 +3,7 @@
     <div class="row mt-3 g-0">
         <div class="col-3">
             <sidebar class="card ">
-                <div class="p-5 fw-bold sidebar">
+                <div class="p-md-4 py-4 fw-bold sidebar">
                     <router-link to="/best-books">
                         <span class="d-block best_tag">برترین ها</span>
                     </router-link>
@@ -54,7 +54,7 @@
                                 <span class="text-muted">({{book.rates}})</span>
 								<span class="fa fa-star checked"></span>
 								<span class="fw-bold">{{book.score}}</span>
-                                <div class="card-text">{{book.description}}</div>
+                                <div v-html="book.description" class="card-text"></div>
                             </div>
                         </div>
                     </router-link>
@@ -71,17 +71,13 @@
 
 
 <script>
-import { onMounted, watch, ref } from "vue";
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRouter } from 'vue-router'
 import axios from 'axios'
-import Swal from 'sweetalert2'
 
 export default {
 
     setup() {
-        const store = useStore()
-        const route = useRoute()
         const router = useRouter()
 
         let books = ref('')
@@ -191,10 +187,10 @@ export default {
 
 @media screen and (max-width: 806px) {
 	.best_tag{
-		font-size: 1px !important;
+		font-size: 10px !important;
 	}
 	.most_rated_tag{
-		font-size: 1px !important;
+		font-size: 10px !important;
 	}
 }
 

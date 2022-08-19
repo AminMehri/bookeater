@@ -4,10 +4,10 @@
         <div class="col-sm-4 col-md-3 col-lg-2">
             <sidebar class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidenav">
 
-                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
+                <router-link to="/author-panel" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
                     
                     <span class="fs-4">کتاب خوار</span>
-                </a>
+                </router-link>
                 
                 <hr>
 
@@ -21,7 +21,7 @@
                         <div class="collapse" id="dashboard-collapse1">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/books" class=" text-white" >کتاب ها</router-link></li>
-                                <li><router-link to="/author-panel/add-book" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-book/new-book" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -34,7 +34,7 @@
                         <div class="collapse" id="dashboard-collapse2">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/authors" class=" text-white" >نویسنده ها</router-link></li>
-                                <li><router-link to="/author-panel/add-author" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-author/new-author" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -47,7 +47,7 @@
                         <div class="collapse" id="dashboard-collapse3">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/categories" class=" text-white" >دسته بندی ها</router-link></li>
-                                <li><router-link to="/author-panel/add-category" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-category/new-category" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -60,7 +60,7 @@
                         <div class="collapse" id="dashboard-collapse4">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/reviewed-books" class=" text-white" >نقد ها</router-link></li>
-                                <li><router-link to="/author-panel/add-reviewed-book" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-reviewed-book/new-reviewed-book" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -73,7 +73,7 @@
                         <div class="collapse" id="dashboard-collapse5">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/news" class=" text-white" >خبر ها</router-link></li>
-                                <li><router-link to="/author-panel/add-news" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-news/new-news" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -103,21 +103,19 @@
 
                 <div class="col-md-6">
                     <label for="inputAuthor" class="form-label">نام نویسنده</label>
-                    <input type="text" class="form-control" id="inputAuthor">
+                    <input v-model="fullName" type="text" class="form-control" id="inputAuthor">
                 </div>
 
                 <div class="col-md-6">
                     <label for="inputSlug" class="form-label">اسلاگ</label>
-                    <input type="text" class="form-control" id="inputSlug">
+                    <input v-model="slug" type="text" class="form-control" id="inputSlug">
                 </div>
 
                 <div class="col-md-6">
                     <label for="id_category" class="form-label ms-3">دسته بندی های مرتبط:</label>
-                    <select name="category" required="" id="id_category" multiple="">
+                    <select v-model="category" name="category" required="" id="id_category" multiple="">
 
-                        <option value="2" selected="">فلسفه</option>
-                        <option value="1">سیاسی</option>
-                        <option value="3">اقتصادی</option>
+                        <option v-for="category in categories" :value="`${category.id}`">{{category.title}}</option>
 
                     </select>
                 </div>
@@ -126,12 +124,14 @@
 
                 <div class="col-12">
                     <label for="inputDescription" class="form-label">توضیحات</label>
-                    <textarea class="form-control" id="inputDescription" rows="6"></textarea>
+                    <!-- <textarea v-model="description" class="form-control" id="inputDescription" rows="6"></textarea> -->
+                    <ckeditor v-model="description" class="form-control" id="inputDescription" :editor="editor"></ckeditor>
                 </div>
                 
                 <div class="col-12">
                     <label for="inputContent" class="form-label">محتوا</label>
-                    <textarea class="form-control" id="inputContent" rows="10"></textarea>
+                    <!-- <textarea v-model="content" class="form-control" id="inputContent" rows="10"></textarea> -->
+                    <ckeditor v-model="content" class="form-control" id="inputContent" :editor="editor"></ckeditor>
                 </div>
 
                 <div class="col-md-6">
@@ -149,10 +149,153 @@
                 </div>
 
                 <div class="col-12">
-                    <button class="btn btn-primary">ارسال به ادمین</button>
+                    <button @click="sendData()" class="btn btn-primary">ارسال به ادمین</button>
                 </div>
             </div>
         </div>
         
     </div>
 </template>
+
+
+<script>
+import { onMounted, ref } from "vue";
+import { useStore } from 'vuex'
+import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
+import Swal from 'sweetalert2'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+export default{
+    setup() {
+        const store = useStore()
+        const route = useRoute()
+        const router = useRouter()
+
+        let categories = ref('')
+
+        let fullName = ref('')
+        let slug = ref('')
+        let category = ref('')
+        let description = ref('')
+        let content = ref('')
+
+        let editor = ClassicEditor
+
+        let slugForEdit = ref(route.params.slug) 
+
+        if(slugForEdit.value == 'new-author'){
+            
+        }else {
+            axios
+            .post('ShowSingleAuthorEditPanel/', {
+                slug: slugForEdit.value
+            })
+            .then(response => {
+                fullName.value = response.data.data[0].full_name
+                slug.value = response.data.data[0].slug
+                description.value = response.data.data[0].description
+                content.value = response.data.data[0].content
+            })
+            .catch(error => {
+                if(error.response.status == 400 || error.response.status == 404){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'نویسنده ای با این اسلاگ وجود ندارد',
+                        backdrop: false,
+                        timer: 2500,
+                        showConfirmButton: false,
+                    })
+                    router.push('/author-panel')
+                }
+                if(error.response.status == 406){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'شما قادر به ادیت این نویسنده نیستید',
+                        backdrop: false,
+                        timer: 2500,
+                        showConfirmButton: false,
+                    })
+                    router.push('/author-panel')
+                }
+            })
+        }
+
+
+        function getData(){
+            axios
+            .get('ShowAllCategories/')
+            .then(response => {
+                categories.value = response.data.data
+            })
+            .catch(error => {
+                console.log(error.response);
+            })
+        }
+        getData()
+
+
+        function sendData(){
+
+            let formData = new FormData()
+            let thumbnailPic = document.getElementById('inputThumbnail')
+            let imagePic = document.getElementById('inputImage')
+
+            formData.append('fullName', fullName.value)
+            formData.append('slug', slug.value)
+            formData.append('category', category.value)
+            formData.append('description', description.value)
+            formData.append('content', content.value)
+            formData.append('thumbnail', thumbnailPic.files[0])
+            formData.append('image', imagePic.files[0])
+
+            axios
+            .post('AddAuthorPanel/', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                fullName.value = ''
+                slug.value = ''
+                description.value = ''
+                content.value = ''
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ثبت نویسنده موفقیت انجام شد.',
+                    backdrop: false,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    position: 'top',
+                })
+
+                router.push('/author-panel/authors')
+            })
+            .catch(error => {
+                if(error.response.status == 406){
+                    Swal.fire({
+                    icon: 'warning',
+                    title: 'نویسنده با این اسلاگ موجود است',
+                    backdrop: false,
+                    timer: 2500,
+                    showConfirmButton: false,
+                })
+                }
+            })
+        } 
+        
+        return{
+            categories,
+            fullName,
+            slug,
+            category,
+            description,
+            content,
+            editor,
+            getData,
+            sendData,
+        }
+    }
+}
+</script>

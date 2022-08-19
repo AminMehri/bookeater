@@ -11,6 +11,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from .permission import IsAuthor
+from jalali_date import datetime2jalali, date2jalali
+
 
 
 
@@ -27,7 +29,7 @@ class ShowAllNews(APIView):
                 'description': n.description,
                 'slug': n.slug,
                 'image': n.image.url,
-                'date': n.date,
+                'date': datetime2jalali(n.date).strftime('14%y/%m/%d _ %H:%M'),
             })
         
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
@@ -185,6 +187,7 @@ class ShowAllCategories(APIView):
                 'slug': category.slug,
                 'related_author': [[a.full_name, a.slug] for a in category.related_author.filter(status='p')],
                 'thumbnail': category.thumbnail.url,
+                'id': category.id,
             })
         
 
@@ -206,6 +209,7 @@ class ShowAllAuthors(APIView):
                 'slug': author.slug,
                 'related_category': [[a.title, a.slug] for a in author.related_category.filter(status='p')],
                 'thumbnail': author.thumbnail.url,
+                'id': author.id,
             })
         
 
@@ -257,7 +261,7 @@ class ShowSingleNews(APIView):
                 'title': n.title,
                 'content': n.content,
                 'image': n.image.url,
-                'date': n.date,
+                'date': datetime2jalali(n.date).strftime('14%y/%m/%d _ %H:%M'),
             })
         another_news = News.objects.filter(status='p')[:5]
         another_news_data = []
@@ -322,7 +326,7 @@ class ShowSingleBook(APIView):
                 'user_score': user_score,
                 'in_readlist': in_readlist1,
                 'slug': book.slug,
-                'date': book.date,
+                'date': datetime2jalali(book.date).strftime('14%y/%m/%d _ %H:%M'),
             })
             user_score = ''
         # end book_detail
@@ -494,7 +498,7 @@ class ShowSingleAuthor(APIView):
                 'user_score': user_score,
                 'slug': book.slug,
                 'thumbnail': book.thumbnail.url,
-                'in_readlist': in_readlist
+                'in_readlist': in_readlist,
             })
             user_score = ''
         
@@ -502,6 +506,7 @@ class ShowSingleAuthor(APIView):
             'full_name': author.full_name,
             'content': author.content,
             'image': author.image.url,
+            'date': datetime2jalali(author.date).strftime('14%y/%m/%d _ %H:%M'),
         }]
 
         return Response({'status': 'ok', 'books_data': books_data, 'author_data': author_data,}, status=status.HTTP_200_OK)
@@ -528,7 +533,7 @@ class ShowSingleReviewedBook(APIView):
                 'content': book.content,
                 'image': book.image.url,
                 'author': [[a.full_name, a.slug] for a in book.author.filter(status='p')],
-                'date': book.date,
+                'date': datetime2jalali(book.date).strftime('14%y/%m/%d _ %H:%M'),
                 'critic': book.critic.get_full_name() if book.critic.get_full_name() else book.critic.username,
                 'critic_username': book.critic.username,
             })
@@ -573,6 +578,7 @@ class ShowProfile(APIView):
                 'age': user.age,
                 'public_score': user.public_score,
                 'email': user.email,
+                'is_author': user.is_author,
             })
 
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
@@ -591,6 +597,8 @@ class UpdateProfileInformation(APIView):
             age = serializer.data.get('age')
             sex = serializer.data.get('sex')
             public_score = serializer.data.get('public_score')
+            image = request.FILES.get('image')
+            thumbnail = request.FILES.get('thumbnail')
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -598,6 +606,19 @@ class UpdateProfileInformation(APIView):
         username = self.request.user.username
 
         User.objects.filter(username=username).update(first_name=first_name, last_name=last_name,age=age, sex=sex, public_score=public_score)
+
+        b = get_object_or_404(User, username=username)
+
+        if(image == None):
+            pass
+        else:
+            b.image.save(image.name, image)
+
+        if(thumbnail == None):
+            pass
+        else:
+            b.thumbnail.save(thumbnail.name, thumbnail)
+            
 
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
 
@@ -820,7 +841,7 @@ class ShowComment(APIView):
                 'id': comment.id,
                 'like': comment.like,
                 'dis_like': comment.dis_like,
-                'date': comment.date,
+                'date': datetime2jalali(comment.date).strftime('14%y/%m/%d _ %H:%M'),
             })
         
         return Response({'status': 'OK', 'data': data}, status=status.HTTP_200_OK)
@@ -935,16 +956,23 @@ class ShowUserComment(APIView):
         data = []
         for comment in comments:
             data.append({
-                'username': comment.user.get_full_name(),
+                'username': comment.user.get_full_name() if comment.user.get_full_name() else comment.user.username,
                 'book_title': comment.book.title,
                 'book_slug': comment.book.slug,
                 'content': comment.content,
                 'like': comment.like,
                 'dis_like': comment.dis_like,
-                'date': comment.date,
+                'date': datetime2jalali(comment.date).strftime('14%y/%m/%d _ %H:%M'),
             })
+        
+        user_images_data = [{
+            'image': user.image.url if user.image else 'null',
+            'thumbnail': user.thumbnail.url if user.thumbnail else 'null',
+        }]
 
-        return Response({'status': 'OK', 'data': data}, status=status.HTTP_200_OK) 
+        print(user_images_data)
+
+        return Response({'status': 'OK', 'data': data, 'user_images_data': user_images_data}, status=status.HTTP_200_OK) 
 
 
 
@@ -999,6 +1027,7 @@ class VerifyEmail(APIView):
         
 
         return Response({'status': 'OK'}, status=status.HTTP_200_OK) 
+    
 
 
 # ========================
@@ -1010,10 +1039,16 @@ class ShowBooksPanel(APIView):
 
     def get(self, request):
 
+        username = request.user.username
+
         books = Book.objects.all().order_by('-date')
 
         data = []
         for book in books:
+            if book.status == 'd':
+                if book.written_by.username != username:
+                    continue
+
 
             data.append({
                 'title': book.title,
@@ -1023,6 +1058,8 @@ class ShowBooksPanel(APIView):
                 'category': [a.title for a in book.category.all()],
                 'author': [a.full_name for a in book.author.all()],
                 'status': book.status,
+                'written_by': book.written_by.get_full_name() if book.written_by.get_full_name() else book.written_by.username,
+                'written_by_username': book.written_by.username,
             })
         
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
@@ -1034,16 +1071,24 @@ class ShowNewsPanel(APIView):
 
     def get(self, request):
 
-        news = News.objects.all()
+        username = request.user.username
+
+        news = News.objects.all().order_by('-date')
 
         data = []
         for n in news:
+            if n.status == 'd':
+                if n.written_by.username != username:
+                    continue
+
             data.append({
                 'title': n.title,
                 'description': n.description,
                 'slug': n.slug,
-                'date': n.date,
-                'status': n.status
+                'date': datetime2jalali(n.date).strftime('14%y/%m/%d _ %H:%M'),
+                'status': n.status,
+                'written_by': n.written_by.get_full_name() if n.written_by.get_full_name() else n.written_by.username,
+                'written_by_username': n.written_by.username,
             })
         
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
@@ -1055,14 +1100,22 @@ class ShowQuotesPanel(APIView):
     
     def get(self, request):
 
-        quotes = Quote.objects.all()
+        username = request.user.username
+
+        quotes = Quote.objects.all().order_by('-date')
 
         data = []
         for quote in quotes:
+            if quote.status == 'd':
+                if quote.written_by.username != username:
+                    continue
+
             data.append({
                 'author': quote.author,
                 'description': quote.description,
                 'status': quote.status,
+                'written_by': quote.written_by.get_full_name() if quote.written_by.get_full_name() else quote.written_by.username,
+                'written_by_username': quote.written_by.username,
             })
 
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
@@ -1074,14 +1127,22 @@ class ShowCategoriesPanel(APIView):
 
     def get(self, request):
 
-        categories = Category.objects.all()
+        username = request.user.username
+
+        categories = Category.objects.all().order_by('-date')
 
         data = []
         for category in categories:
+            if category.status == 'd':
+                if category.written_by.username != username:
+                    continue
+
             data.append({
                 'title': category.title,
                 'slug': category.slug,
                 'status': category.status,
+                'written_by': category.written_by.get_full_name() if category.written_by.get_full_name() else category.written_by.username,
+                'written_by_username': category.written_by.username,
             })
         
 
@@ -1094,15 +1155,23 @@ class ShowAuthorsPanel(APIView):
 
     def get(self, request):
 
-        authors = Author.objects.all()
+        username = request.user.username
+
+        authors = Author.objects.all().order_by('-date')
 
         data = []
         for author in authors:
+            if author.status == 'd':
+                if author.written_by.username != username:
+                    continue
+
             data.append({
                 'full_name': author.full_name,
                 'slug': author.slug,
                 'related_category': [[a.title, a.slug] for a in author.related_category.all()],
                 'status': author.status,
+                'written_by': author.written_by.get_full_name() if author.written_by.get_full_name() else author.written_by.username,
+                'written_by_username': author.written_by.username,
             })
         
 
@@ -1115,10 +1184,16 @@ class ShowReviewedBooksPanel(APIView):
     
     def get(self, request):
 
+        username = request.user.username
+
         books = Reviewed_Book.objects.all().order_by('-date')
 
         data = []
         for book in books:
+            if book.status == 'd':
+                if book.critic.username != username:
+                    continue
+
             data.append({
                 'title': book.title,
                 'author': [[a.full_name, a.slug] for a in book.author.all()],
@@ -1133,7 +1208,7 @@ class ShowReviewedBooksPanel(APIView):
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
 
 
-
+# create panel views
 class AddBookPanel(APIView):
     permission_classes = [IsAuthenticated&IsAuthor]
 
@@ -1147,15 +1222,417 @@ class AddBookPanel(APIView):
             content = serializer.data.get('content')
             author = serializer.data.get('author')
             category = serializer.data.get('category')
+            thumbnail = request.FILES.get('thumbnail')
+            image = request.FILES.get('image')
+
+            if author[0] == 'undefined' or category[0] == 'undefined' or author[0] == '' or category[0] == '':
+                return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        user = self.request.user
+
+        if Book.objects.filter(slug=slug):
+            if Book.objects.filter(written_by=user).filter(status='d'):
+
+                Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                sample = get_object_or_404(Book, slug=slug)
+                sample.thumbnail.save(thumbnail.name, thumbnail)
+                sample.image.save(image.name, image)
+
+                for a in author[0].split(','):
+                    sample.author.add(a)
+            
+                for a in category[0].split(','):
+                    sample.category.add(a)
+
+            else:
+                return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            b = Book(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+            b.thumbnail.save(thumbnail.name, thumbnail)
+            b.image.save(image.name, image)
+            for a in author[0].split(','):
+                b.author.add(a)
+        
+            for a in category[0].split(','):
+                b.category.add(a)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class AddAuthorPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.AddAuthorPanelSerializer(data=request.data)
+        if serializer.is_valid():
+            full_name = serializer.data.get('fullName')
+            slug = serializer.data.get('slug')
+            description = serializer.data.get('description')
+            content = serializer.data.get('content')
+            category = serializer.data.get('category')
+            thumbnail = request.FILES.get('thumbnail')
+            image = request.FILES.get('image')
+
+            if category[0] == 'undefined' or category[0] == '':
+                return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
         user = self.request.user
 
-        auth = get_object_or_404(Author, slug=author)
-        cat = get_object_or_404(Category, slug=category)
+        if Author.objects.filter(slug=slug):
+            if Author.objects.filter(written_by=user).filter(status='d'):
 
-        Book.objects.create(title=title, slug=slug, description=description ,content=content ,author=auth ,category=cat, written_by=user, status='d')
+                Author.objects.filter(slug=slug).update(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                sample = get_object_or_404(Author, slug=slug)
+                sample.thumbnail.save(thumbnail.name, thumbnail)
+                sample.image.save(image.name, image)
+
+                for a in category[0].split(','):
+                    sample.related_category.add(a)
+
+            else:
+                return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            b = Author(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status='d')
+            b.thumbnail.save(thumbnail.name, thumbnail)
+            b.image.save(image.name, image)
+            for a in category[0].split(','):
+                b.related_category.add(a)
 
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class AddCategoryPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.AddCategoryPanelSerializer(data=request.data)
+        if serializer.is_valid():
+            title = serializer.data.get('title')
+            slug = serializer.data.get('slug')
+            description = serializer.data.get('description')
+            content = serializer.data.get('content')
+            author = serializer.data.get('author')
+            thumbnail = request.FILES.get('thumbnail')
+            image = request.FILES.get('image')
+
+            if author[0] == 'undefined' or author[0] == '':
+                return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = self.request.user
+
+        if Category.objects.filter(slug=slug):
+            if Category.objects.filter(written_by=user).filter(status='d'):
+
+                Category.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                sample = get_object_or_404(Category, slug=slug)
+                sample.thumbnail.save(thumbnail.name, thumbnail)
+                sample.image.save(image.name, image)
+
+                for a in author[0].split(','):
+                    sample.related_author.add(a)
+
+            else:
+                return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            b = Category(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+            b.thumbnail.save(thumbnail.name, thumbnail)
+            b.image.save(image.name, image)
+            for a in author[0].split(','):
+                b.related_author.add(a)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class AddReviewedBookPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.AddBookPanelSerializer(data=request.data)
+        if serializer.is_valid():
+            title = serializer.data.get('title')
+            slug = serializer.data.get('slug')
+            description = serializer.data.get('description')
+            content = serializer.data.get('content')
+            thumbnail = request.FILES.get('thumbnail')
+            image = request.FILES.get('image')
+            author = serializer.data.get('author')
+            category = serializer.data.get('category')
+
+            if author[0] == 'undefined' or category[0] == 'undefined' or author[0] == '' or category[0] == '':
+                return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        user = self.request.user
+
+        if Reviewed_Book.objects.filter(slug=slug):
+            if Reviewed_Book.objects.filter(critic=user).filter(status='d'):
+
+                Reviewed_Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,critic=user, status='d')
+                sample = get_object_or_404(Reviewed_Book, slug=slug)
+                sample.thumbnail.save(thumbnail.name, thumbnail)
+                sample.image.save(image.name, image)
+
+                for a in author[0].split(','):
+                    sample.author.add(a)
+            
+                for a in category[0].split(','):
+                    sample.category.add(a)
+
+            else:
+                return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            b = Reviewed_Book(title=title, slug=slug, description=description ,content=content ,critic=user, status='d')
+            b.thumbnail.save(thumbnail.name, thumbnail)
+            b.image.save(image.name, image)
+            for a in author[0].split(','):
+                b.author.add(a)
+        
+            for a in category[0].split(','):
+                b.category.add(a)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class AddNewsPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.AddNewsPanelSerializer(data=request.data)
+        if serializer.is_valid():
+            title = serializer.data.get('title')
+            slug = serializer.data.get('slug')
+            description = serializer.data.get('description')
+            content = serializer.data.get('content')
+            image = request.FILES.get('image')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = self.request.user
+
+        if News.objects.filter(slug=slug):
+            if News.objects.filter(written_by=user).filter(status='d'):
+
+                News.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                sample = get_object_or_404(News, slug=slug)
+                sample.image.save(image.name, image)
+
+            else:
+                return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            b = News(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+            b.image.save(image.name, image)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class AddQuotePanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.AddQuotePanelSerializer(data=request.data)
+        if serializer.is_valid():
+            author = serializer.data.get('fullName')
+            description = serializer.data.get('description')
+            thumbnail = request.FILES.get('thumbnail')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = self.request.user
+
+        b = Quote(author=author, description=description ,written_by=user, status='d')
+        b.thumbnail.save(thumbnail.name, thumbnail)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+# edit panel views
+class ShowSingleBookEditPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        books = get_object_or_404(Book, slug=slug)
+
+        book = Book.objects.filter(slug=slug)
+
+        username = request.user.username
+
+        if books.status == 'd' and books.written_by.username == username:
+            data = []
+            for b in book:
+                data.append({
+                    'title': b.title,
+                    'slug': b.slug,
+                    'content': b.content,
+                    'description': b.description,
+                })
+        else:
+            return Response({'status': 'you can not see this book'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
+
+
+
+class ShowSingleAuthorEditPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        authors = get_object_or_404(Author, slug=slug)
+
+        author = Author.objects.filter(slug=slug)
+
+        username = request.user.username
+
+        if authors.status == 'd' and authors.written_by.username == username:
+            data = []
+            for b in author:
+                data.append({
+                    'full_name': b.full_name,
+                    'slug': b.slug,
+                    'content': b.content,
+                    'description': b.description,
+                })
+        else:
+            return Response({'status': 'you can not see this author'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
+
+
+
+class ShowSingleCategoryEditPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        categories = get_object_or_404(Category, slug=slug)
+
+        category = Category.objects.filter(slug=slug)
+
+        username = request.user.username
+
+        if categories.status == 'd' and categories.written_by.username == username:
+            data = []
+            for b in category:
+                data.append({
+                    'title': b.title,
+                    'slug': b.slug,
+                    'content': b.content,
+                    'description': b.description,
+                })
+        else:
+            return Response({'status': 'you can not see this author'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
+
+
+
+class ShowSingleReviewedBookEditPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        books = get_object_or_404(Reviewed_Book, slug=slug)
+
+        book = Reviewed_Book.objects.filter(slug=slug)
+
+        username = request.user.username
+
+        if books.status == 'd' and books.critic.username == username:
+            data = []
+            for b in book:
+                data.append({
+                    'title': b.title,
+                    'slug': b.slug,
+                    'content': b.content,
+                    'description': b.description,
+                })
+        else:
+            return Response({'status': 'you can not see this book'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
+
+
+
+class ShowSingleNewsEditPanel(APIView):
+    permission_classes = [IsAuthenticated&IsAuthor]
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            slug = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        n = get_object_or_404(News, slug=slug)
+
+        news = News.objects.filter(slug=slug)
+
+        username = request.user.username
+
+        if n.status == 'd' and n.written_by.username == username:
+            data = []
+            for b in news:
+                data.append({
+                    'title': b.title,
+                    'slug': b.slug,
+                    'content': b.content,
+                    'description': b.description,
+                })
+        else:
+            return Response({'status': 'you can not see this book'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)

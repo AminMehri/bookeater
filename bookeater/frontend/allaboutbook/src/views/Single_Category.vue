@@ -2,10 +2,10 @@
     <div class="container text-center">
         <h1 class="mt-5">{{category.title}}</h1>
         <div class="row mt-4">
-            <div class="col-md-8 mx-auto single-category p-5">
-                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${category.image}`" class="img-fluid" id="larger_image">
+            <div class="col-md-8 mx-auto single-category p-md-4">
+                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${category.image}`" class="img-fluid mb-4" id="larger_image">
 
-                <p>{{category.content}}</p>
+                <p v-html="category.content"></p>
 
 
                 <!-- Modal star rating book -->
@@ -34,8 +34,7 @@
                 <p class="h3 text-warning mb-0 mt-5">کتاب های مرتبط</p>
                 <swiper
                     :modules="modules"
-                    :slides-per-view="3"
-                    :loop="true"
+                    :breakpoints="swiperOptions.breakpoints"
                     navigation
                     >
 
@@ -63,7 +62,7 @@
                 <section class="container mt-5">
                     <div class="row d-flex">
                         
-                            <div v-for="author in category.related_author" class="col-lg-3 col-md-3 col-sm-4 text-center mb-3">
+                            <div v-for="author in category.related_author" class="col-sm-4 col-6 text-center mb-3">
                                 <router-link :to="`/author/${author[1]}`" class="text-decoration-none">
                                     <img class="rounded-circle mb-2 w-100" :src="`http://127.0.0.1:8000/media${author[2]}`" width="200px">
                                     <strong class="text-warning d-block h5">{{author[0]}}</strong>
@@ -82,13 +81,10 @@
 
 
 <script>
-import { onMounted, watch, ref } from "vue";
-import { useStore } from 'vuex'
+import { ref } from "vue";
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-import Swal from 'sweetalert2'
 
-import { Navigation, A11y } from 'swiper';
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
@@ -103,9 +99,24 @@ export default {
     },
 
     setup() {
-        const store = useStore()
         const route = useRoute()
         const router = useRouter()
+
+        let swiperOptions = {
+			breakpoints: {       
+				296: {       
+					slidesPerView: 1,
+				},          
+				344: {       
+					slidesPerView: 2,       
+				},   
+
+				500: {       
+					slidesPerView: 3,       
+				} 
+			}
+		}
+
 
         let slug = ref('')
         slug.value = route.params.slug
@@ -216,10 +227,10 @@ export default {
 
 
         return {
-            modules: [Navigation, A11y],
             largerImage,
             category,
             relatedBooks,
+            swiperOptions,
             getData,
             takeSlug,
             sendRate,

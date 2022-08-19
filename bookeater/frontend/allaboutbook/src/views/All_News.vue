@@ -6,7 +6,7 @@
 
                 <router-link v-for="n in news" :to="`/news/${n.slug}`" class="col-md-4 col-sm-6 p-md-3 p-3 text-dark card-news">
                     <h5>{{n.title}}</h5>
-                    <p style="text-align: justify;">{{n.description}}</p>
+                    <p v-html="n.description" style="text-align: justify;"></p>
                 </router-link>
 
             </div>
@@ -17,17 +17,11 @@
 
 
 <script>
-import { onMounted, ref } from "vue";
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from "vue";
 import axios from 'axios'
-import Swal from 'sweetalert2'
 
 export default{
     setup() {
-        const store = useStore()
-        const route = useRoute()
-        const router = useRouter()
 
         let news = ref('')
 

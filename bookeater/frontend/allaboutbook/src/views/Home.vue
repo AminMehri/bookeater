@@ -40,24 +40,18 @@
 						<div class="carousel-item active">
 							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
 							<div class="carousel-caption text-dark">
-								<h5>First slide label</h5>
-								<p>Some representative placeholder content for the first slide.</p>
 							</div>
 						</div>
 
 						<div class="carousel-item">
 							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
 							<div class="carousel-caption text-dark">
-								<h5>Second slide label</h5>
-								<p>Some representative placeholder content for the second slide.</p>
 							</div>
 						</div>
 
 						<div class="carousel-item">
 							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
 							<div class="carousel-caption text-dark">
-								<h5>Third slide label</h5>
-								<p>Some representative placeholder content for the third slide.</p>
 							</div>
 						</div>
 
@@ -93,7 +87,7 @@
 					
 					<div class="text-light">
 						<h4>{{quotes.author}}</h4>
-						<span>{{quotes.description}}</span>
+						<span v-html="quotes.description"></span>
 					</div>
 
 				</div>
@@ -105,7 +99,7 @@
 		<!-- Modal star rating book -->
 		<div class="modal fade w-100" id="staticBackdrop" tabindex="-1">
 			<div class="modal-dialog modal-dialog-centered">
-				<div class="modal-content bg-dark p-5">
+				<div class="modal-content bg-dark p-3">
 					<div class="modal-body mx-auto text-center">
 						<div class="mx-auto star-rating text-white fs-4">
 							<span @click="sendRate(1)" class="fa fa-star"></span>
@@ -133,8 +127,7 @@
 
 			<swiper
 				:modules="modules"
-				:slides-per-view="4"
-				:loop="true"
+				:breakpoints="swiperOptions.breakpoints"
 				:slides-per-column-fill="column"
 				navigation
 				>
@@ -175,7 +168,7 @@
 						</path>
 					</svg>
 					
-					<div v-for="a in popularCategories" class="col-lg-3 col-md-3 col-sm-4 text-center mb-3">
+					<div v-for="a in popularCategories" class="col-lg-3 col-md-3 col-sm-4 col-6 text-center mb-3">
 						<router-link :to="`/category/${a.slug}`" class="text-decoration-none">
 							<img class="rounded-circle mb-2 w-100 image-hover " :src="`http://127.0.0.1:8000/media${a.thumbnail}`" width="200px">
 							<strong class="text-light d-block h5">{{a.title}}</strong>
@@ -204,7 +197,7 @@
 						
 						<div class="text-light">
 							<h4>{{quotes2.author}}</h4>
-							<span>{{quotes2.description}}</span>
+							<span v-html="quotes2.description"></span>
 						</div>
 
 					</div>
@@ -217,8 +210,7 @@
 			<router-link to="/most-rated-books" class="text-decoration-none" ><p class="h3 text-light warning-on-hover mb-0 mt-5">پربازدید ترین کتابها ></p></router-link>
 			<swiper
 				:modules="modules"
-				:slides-per-view="4"
-				:loop="true"
+				:breakpoints="swiperOptions.breakpoints"
 				navigation
 				>
 
@@ -237,6 +229,7 @@
 							<div class="mx-auto book-star">
 								<span class="fw-bold ms-1">{{book.user_score}}</span>
 								<a @click="takeSlug(book.slug)" href="#" class="ms-4 fa fa-star" data-bs-toggle="modal" data-bs-target="#staticBackdrop"></a>
+								<span>({{book.rates}})</span>
 								<span class="fa fa-star checked"></span>
 								<span class="fw-bold">{{book.score}}</span>
 							</div>
@@ -258,7 +251,7 @@
 						</path>
 					</svg>
 					
-					<div v-for="a in popularAuthors" class="col-lg-3 col-md-3 col-sm-4 text-center mb-3">
+					<div v-for="a in popularAuthors" class="col-lg-3 col-md-3 col-sm-4 col-6 text-center mb-3">
 						<router-link :to="`/author/${a.slug}`" class="text-decoration-none">
 							<img class="rounded-circle mb-2 w-100 image-hover-reverse" :src="`http://127.0.0.1:8000/media${a.thumbnail}`" width="200px">
 							<strong class="text-light d-block h5">{{a.full_name}}</strong>
@@ -279,12 +272,10 @@
 
 
 <script>
-import { onMounted, ref } from "vue";
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-import { Navigation, A11y } from 'swiper';
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
@@ -299,8 +290,25 @@ export default {
 	},
 
 	setup() {
-		const store = useStore()
-		const route = useRoute()
+		let swiperOptions = {
+			breakpoints: {       
+				320: {       
+					slidesPerView: 1,
+				},          
+				400: {       
+					slidesPerView: 2,       
+				},   
+			
+				650: {       
+					slidesPerView: 3,       
+				},
+
+				925: {       
+					slidesPerView: 4,       
+				} 
+			}
+		}
+
 		const router = useRouter()
 
 		let news = ref('')
@@ -470,7 +478,6 @@ export default {
 
 
 		return {
-			modules: [Navigation, A11y],
 			news,
 			quotes,
 			quotes2,
@@ -484,6 +491,7 @@ export default {
 			loading4,
 			loading5,
 			loading6,
+			swiperOptions,
 			getData,
 			takeSlug,
 			sendRate,

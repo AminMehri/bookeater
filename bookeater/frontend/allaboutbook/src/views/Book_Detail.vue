@@ -13,10 +13,10 @@
 
 
             <div class="row mt-4">
-                <div class="col-md-8 mx-auto single-category p-5">
-                    <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${b.image}`" class="img-fluid" id="larger_image">
+                <div class="col-md-8 mx-auto single-category p-sm-4">
+                    <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${b.image}`" class="img-fluid mb-4" id="larger_image">
 
-                    <p>{{b.content}}</p>
+                    <p v-html="b.content"></p>
 
 
                     <!-- Modal star rating detail book-->
@@ -71,7 +71,7 @@
                     <p class="h3 text-warning mb-0 mt-5">کتاب های مرتبط</p>
                     <swiper
                         :modules="modules"
-                        :slides-per-view="3"
+                        :breakpoints="swiperOptions.breakpoints"
                         :loop="true"
                         navigation
                         >
@@ -100,7 +100,7 @@
                     <section class="container mt-5">
                         <div class="row d-flex">
                             
-                                <div v-for="book in author_books" class="col-lg-3 col-md-3 col-sm-4 text-center mb-3">
+                                <div v-for="book in author_books" class="col-lg-3 col-md-3 col-sm-4 col-6 text-center mb-3">
                                     <router-link @click="getData(book.slug); getComments()" :to="`/book/${book.slug}`" class="text-decoration-none">
                                         <img class="rounded-circle mb-2 w-100" :src="`http://127.0.0.1:8000/media${book.thumbnail}`" width="200px">
                                         <strong class="text-warning d-block h5">{{book.title}}</strong>
@@ -113,7 +113,7 @@
 
                     </section>
 
-                    <div class="Make-Comment">
+                    <div v-if="$store.state.isAuthenticated" class="Make-Comment">
                         <h3 class="text-center">گذاشتن کامنت</h3>
                         <div class="row g-3 border p-4">
                             
@@ -128,15 +128,17 @@
                         </div>
                     </div>
 
+                    <div v-if="!$store.state.isAuthenticated" class="alert alert-warning">برای ثبت دیدگاه لطفا <router-link to="/login">لاگین</router-link> کنید</div>
+
                     <section class="Comment container ">
                         <p>دیدگاه ها</p>
                         <div v-for="comment in comments" class="row border text-end">
                             <div v-if="comment.reply_to == 'null'">
                                 <p class="d-flex">
                                     <p class="ms-3 text-end"><router-link :to="`/user/${comment.username_slug}`">{{comment.username}}</router-link></p>
-                                    <p>{{comment.id}}</p>
+                                    <p>{{comment.date}}</p>
                                 </p>
-                                <p>{{comment.content}}</p>
+                                <p v-html="comment.content"></p>
                                 <p>
                                     <span class="ms-1">{{comment.like}}</span>
                                     <svg @click="likeComment(comment.id)" class="custom-cursor" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.1.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path d="M96 191.1H32c-17.67 0-32 14.33-32 31.1v223.1c0 17.67 14.33 31.1 32 31.1h64c17.67 0 32-14.33 32-31.1V223.1C128 206.3 113.7 191.1 96 191.1zM512 227c0-36.89-30.05-66.92-66.97-66.92h-99.86C354.7 135.1 360 113.5 360 100.8c0-33.8-26.2-68.78-70.06-68.78c-46.61 0-59.36 32.44-69.61 58.5c-31.66 80.5-60.33 66.39-60.33 93.47c0 12.84 10.36 23.99 24.02 23.99c5.256 0 10.55-1.721 14.97-5.26c76.76-61.37 57.97-122.7 90.95-122.7c16.08 0 22.06 12.75 22.06 20.79c0 7.404-7.594 39.55-25.55 71.59c-2.046 3.646-3.066 7.686-3.066 11.72c0 13.92 11.43 23.1 24 23.1h137.6C455.5 208.1 464 216.6 464 227c0 9.809-7.766 18.03-17.67 18.71c-12.66 .8593-22.36 11.4-22.36 23.94c0 15.47 11.39 15.95 11.39 28.91c0 25.37-35.03 12.34-35.03 42.15c0 11.22 6.392 13.03 6.392 22.25c0 22.66-29.77 13.76-29.77 40.64c0 4.515 1.11 5.961 1.11 9.456c0 10.45-8.516 18.95-18.97 18.95h-52.53c-25.62 0-51.02-8.466-71.5-23.81l-36.66-27.51c-4.315-3.245-9.37-4.811-14.38-4.811c-13.85 0-24.03 11.38-24.03 24.04c0 7.287 3.312 14.42 9.596 19.13l36.67 27.52C235 468.1 270.6 480 306.6 480h52.53c35.33 0 64.36-27.49 66.8-62.2c17.77-12.23 28.83-32.51 28.83-54.83c0-3.046-.2187-6.107-.6406-9.122c17.84-12.15 29.28-32.58 29.28-55.28c0-5.311-.6406-10.54-1.875-15.64C499.9 270.1 512 250.2 512 227z"/></svg>
@@ -162,7 +164,6 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 
-import { Navigation, A11y } from 'swiper';
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
@@ -183,6 +184,21 @@ export default {
         // watch([test], ()=>{
         //     alert(test.value)
         // })
+
+        let swiperOptions = {
+			breakpoints: {       
+				296: {       
+					slidesPerView: 1,
+				},          
+				344: {       
+					slidesPerView: 2,       
+				},   
+
+				500: {       
+					slidesPerView: 3,       
+				} 
+			}
+		}
 
         let slug = ref('')
 
@@ -461,7 +477,6 @@ export default {
 
 
         return {
-            modules: [Navigation, A11y],
             largerImage,
             book,
             relatedBooks,
@@ -469,6 +484,7 @@ export default {
             slug,
             comments,
             commentContent,
+            swiperOptions,
             getData,
             sendRate,
             takeSlug,

@@ -3,7 +3,7 @@
         <div class="container py-5">
             <div class="row text-center text-white mb-5">
                 <div class="col-lg-7 mx-auto">
-                    <h1 class="display-4 fw-bold text-dark">Product List</h1>
+                    <h1 class="display-4 fw-bold text-dark">خواندنی ها</h1>
                 </div>
             </div>
 
@@ -51,7 +51,7 @@
                                                 <span class="fw-bold">{{book.user_score}}</span>
                                                 <span class="fa fa-star checked me-3"></span>
                                                 <span class="fw-bold">{{book.score}}</span>
-                                                <span class="card-text d-block">{{book.description}}</span>
+                                                <span v-html="book.description" class="card-text d-block"></span>
                                             </div>
                                         </div>
                                         <div class="col-md-4">

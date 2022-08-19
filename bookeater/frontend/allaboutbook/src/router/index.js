@@ -149,66 +149,79 @@ const routes = [
     path: '/author-panel',
     name: 'author-panel',
     component: Author_Panel,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/books',
     name: 'author-panel-books',
     component: Books,
+    meta: { loginRequired: true }
   },
   {
-    path: '/author-panel/add-book',
+    path: '/author-panel/add-book/:slug',
     name: 'author-panel-add-book',
     component: Add_Book,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/categories',
     name: 'author-panel-categories',
     component: Categories,
+    meta: { loginRequired: true }
   },
   {
-    path: '/author-panel/add-category',
+    path: '/author-panel/add-category/:slug',
     name: 'author-panel-add-category',
     component: Add_Category,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/authors',
     name: 'author-panel-authors',
     component: Authors,
+    meta: { loginRequired: true }
   },
   {
-    path: '/author-panel/add-author',
+    path: '/author-panel/add-author/:slug',
     name: 'author-panel-add-author',
     component: Add_Author,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/reviewed-books',
     name: 'author-panel-reviewed-books',
     component: Reviewed_Books_Panel,
+    meta: { loginRequired: true }
   },
   {
-    path: '/author-panel/add-reviewed-book',
+    path: '/author-panel/add-reviewed-book/:slug',
     name: 'author-panel-add-reviewed-book',
     component: Add_Reviewed_Book,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/news',
     name: 'author-panel-news',
     component: News_Panel,
+    meta: { loginRequired: true }
   },
   {
-    path: '/author-panel/add-news',
+    path: '/author-panel/add-news/:slug',
     name: 'author-panel-add-news',
     component: Add_News,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/quotes',
     name: 'author-panel-quotes',
     component: Quotes,
+    meta: { loginRequired: true }
   },
   {
     path: '/author-panel/add-quote',
     name: 'author-panel-add-quote',
     component: Add_Quote,
+    meta: { loginRequired: true }
   },
   // end author panel
   {

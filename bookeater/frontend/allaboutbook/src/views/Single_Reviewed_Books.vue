@@ -3,16 +3,16 @@
         <h1 class="mt-5">{{reviewedBook.title}}</h1>
         <router-link v-for="author in reviewedBook.author" :to="`/author/${author[1]}`" class="text-muted d-block">{{author[0]}}</router-link>
         <div class="row mt-4">
-            <div class="col-md-8 mx-auto single-category p-5">
-                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${reviewedBook.image}`" class="img-fluid" id="larger_image">
+            <div class="col-md-8 mx-auto single-category p-md-4">
+                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${reviewedBook.image}`" class="img-fluid mb-4" id="larger_image">
 
-                <p>{{reviewedBook.content}}</p>
+                <p v-html="reviewedBook.content"></p>
 
                 <p>
                     به قلم:<router-link :to="`/user/${reviewedBook.critic_username}`" class="text-danger d-block h4">{{reviewedBook.critic}}</router-link>
                 </p>
 
-                <p class="h4 text-warning mb-0 mt-5">نقد های مرتبط</p>
+                <p class="h4 text-warning mb-2 mt-5">نقد های مرتبط</p>
 
                 <div class="text-end">
                     <router-link @click="getData(a.slug)" v-for="a in relatedReviewedBooks" class="d-block text-danger h5" :to="`/reviewed-book/${a.slug}`">{{a.title}}</router-link>
@@ -25,13 +25,10 @@
 
 
 <script>
-import { onMounted, watch, ref } from "vue";
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRoute } from 'vue-router'
 import axios from 'axios'
-import Swal from 'sweetalert2'
 
-import { Navigation, A11y } from 'swiper';
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
 
@@ -46,13 +43,10 @@ export default {
     },
 
     setup() {
-        const store = useStore()
         const route = useRoute()
-        const router = useRouter()
 
         let slug = ref('')
         
-
         let reviewedBook = ref('')
 
         let relatedReviewedBooks = ref('')
@@ -98,7 +92,6 @@ export default {
 
 
         return {
-            modules: [Navigation, A11y],
             largerImage,
             reviewedBook,
             relatedReviewedBooks,

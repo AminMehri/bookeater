@@ -34,7 +34,6 @@ export default {
                 router.push('/login')
             })
             .catch(error => {
-                console.log(error.response)
                 if (error.response.status == 'token is not exist or expired'){
                     Swal.fire({
                         icon: 'danger',

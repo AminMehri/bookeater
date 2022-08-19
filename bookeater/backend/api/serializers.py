@@ -1,17 +1,18 @@
 from rest_framework import serializers
+from .models import Book, Author, Category
 
 
 
 class SlugSerializer(serializers.Serializer):
-    slug = serializers.CharField(allow_null=False, allow_blank=False)
+    slug = serializers.CharField()
 
 
 
 class ContactUsSerializer(serializers.Serializer):
-    full_name = serializers.CharField(allow_null=False, allow_blank=False)
-    email = serializers.EmailField(allow_null=False, allow_blank=False)
-    subject = serializers.CharField(allow_null=False, allow_blank=False)
-    content = serializers.CharField(allow_null=False, allow_blank=False)
+    full_name = serializers.CharField()
+    email = serializers.EmailField()
+    subject = serializers.CharField()
+    content = serializers.CharField()
 
 
 
@@ -22,8 +23,8 @@ class MakeRateSerializer(serializers.Serializer):
 
 
 class MakeCommentSerializer(serializers.Serializer):
-    content = serializers.CharField(allow_null=False, allow_blank=False)
-    slug = serializers.CharField(allow_null=False, allow_blank=False)
+    content = serializers.CharField()
+    slug = serializers.CharField()
     id = serializers.IntegerField(allow_null=True)
 
 
@@ -34,17 +35,19 @@ class LikeCommentSerializer(serializers.Serializer):
 
 
 class SendEmailSerializer(serializers.Serializer):
-    username = serializers.CharField(allow_null=False, allow_blank=False)
+    username = serializers.CharField()
     email = serializers.EmailField()
 
 
 
 class GetProfileInformationSerializer(serializers.Serializer):
-    first_name = serializers.CharField(allow_null=False, allow_blank=False)
-    last_name = serializers.CharField(allow_null=False, allow_blank=False)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
     age = serializers.IntegerField()
     public_score = serializers.BooleanField()
-    sex = serializers.CharField(allow_null=False, allow_blank=False)
+    sex = serializers.CharField()
+    thumbnail = serializers.ImageField(required=False)
+    image = serializers.ImageField(required=False)
 
 
 
@@ -53,11 +56,49 @@ class GetProfileInformationSerializer(serializers.Serializer):
 # =============================
 
 class AddBookPanelSerializer(serializers.Serializer):
-    title = serializers.CharField(allow_null=False, allow_blank=False)
-    slug = serializers.SlugField(allow_null=False, allow_blank=False)
-    author = serializers.SlugField()
-    category = serializers.SlugField()
-    description = serializers.CharField(allow_null=False, allow_blank=False)
-    content = serializers.CharField(allow_null=False, allow_blank=False)
-    # thumbnail = serializers.ImageField(allow_null=False, allow_blank=False)
-    # image = serializers.ImageField(allow_null=False, allow_blank=False)
+    title = serializers.CharField()
+    slug = serializers.SlugField()
+    author = serializers.ListField()
+    category = serializers.ListField()
+    description = serializers.CharField()
+    content = serializers.CharField()
+    thumbnail = serializers.ImageField()
+    image = serializers.ImageField()
+
+
+
+class AddAuthorPanelSerializer(serializers.Serializer):
+    fullName = serializers.CharField()
+    slug = serializers.SlugField()
+    category = serializers.ListField()
+    description = serializers.CharField()
+    content = serializers.CharField()
+    thumbnail = serializers.ImageField()
+    image = serializers.ImageField()
+
+
+
+class AddCategoryPanelSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.SlugField()
+    author = serializers.ListField()
+    description = serializers.CharField()
+    content = serializers.CharField()
+    thumbnail = serializers.ImageField()
+    image = serializers.ImageField()
+
+
+
+class AddNewsPanelSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.SlugField()
+    description = serializers.CharField()
+    content = serializers.CharField()
+    image = serializers.ImageField()
+
+
+
+class AddQuotePanelSerializer(serializers.Serializer):
+    fullName = serializers.CharField()
+    description = serializers.CharField()
+    thumbnail = serializers.ImageField()

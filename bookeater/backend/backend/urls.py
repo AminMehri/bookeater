@@ -22,6 +22,9 @@ urlpatterns = [
     path('', include('api.urls')),
     path('api-auth/', include('rest_framework.urls')),
 
+    path('ckeditor/', include('ckeditor_uploader.urls')),
+
+
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('dj-rest-auth/password/reset/confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm')

@@ -2,16 +2,16 @@
     <div class="container text-center" id="Single_News">
         <h1 class="mt-5">{{news.title}}</h1>
         <div class="row mt-4">
-            <div class="col-md-8 mx-auto single-News p-5">
-                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${news.image}`" class="img-fluid" id="larger_image">
+            <div class="col-md-8 mx-auto single-News p-md-4">
+                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${news.image}`" class="img-fluid mb-4" id="larger_image">
 
-                <p>{{news.content}}</p>
+                <p v-html="news.content"></p>
 
                 <p class="h3 text-warning mb-2 mt-5">و بخوانید</p>
 
                 <div class="row g-md-5 g-0 mt-3">
 
-                    <router-link @click="getData(n.slug)" v-for="n in anotherNews" :to="`/news/${n.slug}`" class="col-12 text-end p-3 my-0 card-news">
+                    <router-link @click="getData(n.slug)" v-for="n in anotherNews" :to="`/news/${n.slug}`" class="col-12 text-end p-sm-2 my-0 card-news">
                         <h5 class="text-danger">{{n.title}}</h5>
                     </router-link>
 
@@ -24,18 +24,14 @@
 
 
 <script>
-import { onMounted, watch, ref } from "vue";
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from "vue";
+import { useRoute } from 'vue-router'
 import axios from 'axios'
-import Swal from 'sweetalert2'
 
 export default {
 
     setup() {
-        const store = useStore()
         const route = useRoute()
-        const router = useRouter()
 
         let slug = ref('')
 

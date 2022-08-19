@@ -38,5 +38,16 @@ urlpatterns = [
     path('ShowAuthorsPanel/', views.ShowAuthorsPanel.as_view(), name="show_authors_panel"),
     path('ShowReviewedBooksPanel/', views.ShowReviewedBooksPanel.as_view(), name="show_reviewed_books_panel"),
     path('AddBookPanel/', views.AddBookPanel.as_view(), name="add_book_panel"),
+    path('AddAuthorPanel/', views.AddAuthorPanel.as_view(), name="add_author_panel"),
+    path('AddCategoryPanel/', views.AddCategoryPanel.as_view(), name="add_category_panel"),
+    path('AddReviewedBookPanel/', views.AddReviewedBookPanel.as_view(), name="add_reviewed_book_panel"),
+    path('AddNewsPanel/', views.AddNewsPanel.as_view(), name="add_news_panel"),
+    path('AddQuotePanel/', views.AddQuotePanel.as_view(), name="add_quote_panel"),
+
+    path('ShowSingleBookEditPanel/', views.ShowSingleBookEditPanel.as_view(), name="show_single_book_edit_panel"),
+    path('ShowSingleAuthorEditPanel/', views.ShowSingleAuthorEditPanel.as_view(), name="show_single_author_edit_panel"),
+    path('ShowSingleCategoryEditPanel/', views.ShowSingleCategoryEditPanel.as_view(), name="show_single_category_edit_panel"),
+    path('ShowSingleReviewedBookEditPanel/', views.ShowSingleReviewedBookEditPanel.as_view(), name="show_single_reviewed_book_edit_panel"),
+    path('ShowSingleNewsEditPanel/', views.ShowSingleNewsEditPanel.as_view(), name="show_single_news_edit_panel"),
     
 ]

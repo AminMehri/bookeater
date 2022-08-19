@@ -4,10 +4,10 @@
         <div class="col-sm-4 col-md-3 col-lg-2">
             <sidebar class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidenav">
 
-                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
+                <router-link to="/author-panel" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
                     
                     <span class="fs-4">کتاب خوار</span>
-                </a>
+                </router-link>
                 
                 <hr>
 
@@ -21,7 +21,7 @@
                         <div class="collapse" id="dashboard-collapse1">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/books" class=" text-white" >کتاب ها</router-link></li>
-                                <li><router-link to="/author-panel/add-book" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-book/new-book" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -34,7 +34,7 @@
                         <div class="collapse" id="dashboard-collapse2">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/authors" class=" text-white" >نویسنده ها</router-link></li>
-                                <li><router-link to="/author-panel/add-author" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-author/new-author" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -47,7 +47,7 @@
                         <div class="collapse" id="dashboard-collapse3">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/categories" class=" text-white" >دسته بندی ها</router-link></li>
-                                <li><router-link to="/author-panel/add-category" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-category/new-category" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -60,7 +60,7 @@
                         <div class="collapse" id="dashboard-collapse4">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/reviewed-books" class=" text-white" >نقد ها</router-link></li>
-                                <li><router-link to="/author-panel/add-reviewed-book" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-reviewed-book/new-reviewed-book" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -73,7 +73,7 @@
                         <div class="collapse" id="dashboard-collapse5">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><router-link to="/author-panel/news" class=" text-white" >خبر ها</router-link></li>
-                                <li><router-link to="/author-panel/add-news" class=" text-white" >اضافه کردن</router-link></li>
+                                <li><router-link to="/author-panel/add-news/new-news" class=" text-white" >اضافه کردن</router-link></li>
                             </ul>
                         </div>
                     </li>
@@ -102,13 +102,18 @@
                 <table class="table table-hover" id="table">
                     <thead>
                         <tr>
-                            <th>نام</th>
+                            <th>سرتیتر خبر</th>
+                            <th>نوشته شده توسط</th>
                             <th>وضعیت</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="n in news">
-                            <td><router-link to="/">{{n.title}}</router-link></td>
+                            <td>
+                                <router-link v-if="n.status == 'p'" :to="`/news/${n.slug}`" target="_blank">{{n.title}}</router-link>
+                                <router-link v-if="n.status == 'd'" :to="`/author-panel/add-news/${n.slug}`">{{n.title}}</router-link>
+                            </td>
+                            <td><router-link :to="`/user/${n.written_by_username}`">{{n.written_by}}</router-link></td>
                             <td>
                                 <span v-if="n.status == 'p'" class="badge bg-success rounded">منتشر شده</span>
                                 <span v-if="n.status == 'd'" class="badge bg-danger rounded">پیش نویس</span>

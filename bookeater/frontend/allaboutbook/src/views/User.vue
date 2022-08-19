@@ -1,32 +1,33 @@
 <template>
-    <div v-if="usernameExist" class="Activity">
+    <div v-if="usernameExist" class="User">
         <div class="row g-0 position-relative">
-            <img src="https://picsum.photos/800/200" alt="">
+            <img v-if="images[0].image != 'null'" :src="`http://127.0.0.1:8000/media${images[0].image}`" class="w-100" height="400">
             <div class="col-3">
                 <sidebar class="position-absolute" style="right: 15%; bottom: -10%;">
-                    <img class="rounded-circle shadow-lg" src="https://picsum.photos/200" alt="">
+                    <img v-if="images[0].thumbnail != 'null'" :src="`http://127.0.0.1:8000/media${images[0].thumbnail}`" class="rounded-circle shadow-lg img-thumbnail" height="200" width="200">
                 </sidebar>
             </div>
         </div>
 
         <div class="row mt-5 g-0">
 
-            <div class="col-3">
+            <div class="col-lg-2 col-md-3 col-sm-4">
                 <p class="me-3">
-                     کاربر: <h3>{{username}}</h3>
+                     کاربر: <p class="h3">{{username}}</p>
                 </p>
             </div>
 
-            <div class="col-8">
+            <div class="col-lg-9 col-md-8 col-sm-7 container-fluid">
                 <h5 class="mb-3">فعالیت ها</h5>
                 <section class="Comment container ">
-                    <p class="btn btn-outline-dark my-0">دیدگاه ها</p>
+                    <p class="btn btn-outline-dark my-0 w-50">دیدگاه ها</p>
+                    <p class="btn btn-outline-dark my-0 w-50">رای ها</p>
                     <div v-if="dataForShow" v-for="comment in comments" class="row border p-2 shadow text-end">
                         <p class="d-flex">
                             <p class="ms-3 text-end">{{comment.username}}</p>
                             <p>{{comment.date}}</p>
                         </p>
-                        <p>{{comment.content}}</p>
+                        <p v-html="comment.content"></p>
                         <p>
                             <span class="ms-1">{{comment.like}}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.1.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path d="M96 191.1H32c-17.67 0-32 14.33-32 31.1v223.1c0 17.67 14.33 31.1 32 31.1h64c17.67 0 32-14.33 32-31.1V223.1C128 206.3 113.7 191.1 96 191.1zM512 227c0-36.89-30.05-66.92-66.97-66.92h-99.86C354.7 135.1 360 113.5 360 100.8c0-33.8-26.2-68.78-70.06-68.78c-46.61 0-59.36 32.44-69.61 58.5c-31.66 80.5-60.33 66.39-60.33 93.47c0 12.84 10.36 23.99 24.02 23.99c5.256 0 10.55-1.721 14.97-5.26c76.76-61.37 57.97-122.7 90.95-122.7c16.08 0 22.06 12.75 22.06 20.79c0 7.404-7.594 39.55-25.55 71.59c-2.046 3.646-3.066 7.686-3.066 11.72c0 13.92 11.43 23.1 24 23.1h137.6C455.5 208.1 464 216.6 464 227c0 9.809-7.766 18.03-17.67 18.71c-12.66 .8593-22.36 11.4-22.36 23.94c0 15.47 11.39 15.95 11.39 28.91c0 25.37-35.03 12.34-35.03 42.15c0 11.22 6.392 13.03 6.392 22.25c0 22.66-29.77 13.76-29.77 40.64c0 4.515 1.11 5.961 1.11 9.456c0 10.45-8.516 18.95-18.97 18.95h-52.53c-25.62 0-51.02-8.466-71.5-23.81l-36.66-27.51c-4.315-3.245-9.37-4.811-14.38-4.811c-13.85 0-24.03 11.38-24.03 24.04c0 7.287 3.312 14.42 9.596 19.13l36.67 27.52C235 468.1 270.6 480 306.6 480h52.53c35.33 0 64.36-27.49 66.8-62.2c17.77-12.23 28.83-32.51 28.83-54.83c0-3.046-.2187-6.107-.6406-9.122c17.84-12.15 29.28-32.58 29.28-55.28c0-5.311-.6406-10.54-1.875-15.64C499.9 270.1 512 250.2 512 227z"/></svg>
@@ -45,8 +46,6 @@
                 </section>
             </div>
 
-            <div class="col-1"></div>
-
         </div>
     </div>
     <div v-if="!usernameExist">
@@ -62,18 +61,13 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { useRoute } from 'vue-router';
 import axios from 'axios'
-import Swal from 'sweetalert2'
-
 
 export default {
 	setup() {
-        const store = useStore()
         const route = useRoute();
-        const router = useRouter();
 
         let username = ref(route.params.username)  
 
@@ -82,6 +76,8 @@ export default {
         let usernameExist = ref(true)
 
         let dataForShow = ref(true)
+
+        let images = ref()
         
         function getData(){
             axios
@@ -90,6 +86,7 @@ export default {
             })
             .then(response => {
                 comments.value = response.data.data
+                images.value = response.data.user_images_data
                 if(comments.value.length == 0){
                     dataForShow.value = false
                 }
@@ -110,6 +107,7 @@ export default {
             username,
             usernameExist,
             dataForShow,
+            images,
             getData,
 		}
     

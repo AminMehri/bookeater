@@ -24,7 +24,14 @@
 
                 <button class="btn fw-bold btn-outline-danger my-2 w-100" @click="doLogout">خروج از سایت</button>
                 <button class="btn fw-bold btn-outline-warning my-2 w-100" data-bs-toggle="modal" data-bs-target="#staticBackdrop">ویرایش اطلاعات</button>
+                <router-link v-if="isAuthor" to="/author-panel" class="btn btn-outline-info fw-bold w-100 my-2">رفتن به پنل نویسنده ها</router-link>
 
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    
+                </div>
             </div>
     
         </div>
@@ -74,6 +81,20 @@
                                     <option value="false">خیر</option>
                                 </select>
                             </div>
+
+                            <div class="">
+                                <div class="input-group mb-3 align-items-center">
+                                    <label for="inputThumbnail" class="form-label ms-3">عکس آواتار:</label>
+                                    <input type="file" class="form-control" id="inputThumbnail">
+                                </div>
+                            </div>
+
+                            <div class="">
+                                <div class="input-group mb-3 align-items-center">
+                                    <label for="inputImage" class="form-label ms-3">عکس خطی: </label>
+                                    <input type="file" class="form-control" id="inputImage">
+                                </div>
+                            </div>
                             
                         </div>
                     </div>
@@ -108,6 +129,7 @@ export default {
         let sex = ref('')
         let age = ref('')
         let publicScore = ref('')
+        let isAuthor = ref()
 
         let updateFirstName = ref('')
         let updateLastName = ref('')
@@ -125,6 +147,7 @@ export default {
                 sex.value = response.data.data[0].sex
                 age.value = response.data.data[0].age
                 publicScore.value = response.data.data[0].public_score
+                isAuthor.value = response.data.data[0].is_author
 
                 if(sex.value == 'm'){
                     sex.value = 'مرد'
@@ -165,13 +188,23 @@ export default {
 
 
         function updateInfo(){
+            let formData = new FormData()
+            let thumbnailPic = document.getElementById('inputThumbnail')
+            let imagePic = document.getElementById('inputImage')
+
+            formData.append('first_name', updateFirstName.value)
+            formData.append('last_name', updateLastName.value)
+            formData.append('age', updateAge.value)
+            formData.append('sex', updateSex.value)
+            formData.append('public_score', updatePublicScore.value)
+            formData.append('thumbnail', thumbnailPic.files[0])
+            formData.append('image', imagePic.files[0])
+
             axios
-            .put('UpdateProfileInformation/', {
-                first_name: updateFirstName.value,
-                last_name: updateLastName.value,
-                age: updateAge.value,
-                sex: updateSex.value,
-                public_score: updatePublicScore.value,
+            .put('UpdateProfileInformation/', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             })
             .then(response => {
                 Swal.fire({
@@ -206,6 +239,7 @@ export default {
             sex,
             age,
             publicScore,
+            isAuthor,
 
             updateFirstName,
             updateLastName,
