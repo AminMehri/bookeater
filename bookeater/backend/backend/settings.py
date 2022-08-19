@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%l2fp!p4pi@8t#8vu01yp@2^&z6ctj-1&!^pw+@_xntt-@pf1!'
+SECRET_KEY = 'SECRET'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,8 +95,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'backend',
-        'USER': 'aminmehri45',
-        'PASSWORD': '1322abcde',
+        'USER': 'SECRET',
+        'PASSWORD': 'SECRET',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -242,6 +242,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.elasticemail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 2525
-EMAIL_HOST_USER = 'info@bookeater.ir'
-DEFAULT_FROM_EMAIL = 'info@bookeater.ir'
-EMAIL_HOST_PASSWORD = '6A4F3324F59941D31A0102F1F101ECBE5BBA'
+EMAIL_HOST_USER = 'SECRET'
+DEFAULT_FROM_EMAIL = 'SECRET'
+EMAIL_HOST_PASSWORD = 'SECRET'
