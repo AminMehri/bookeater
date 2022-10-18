@@ -25,6 +25,7 @@ class Author(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     full_name = models.CharField(max_length=128)
     description = RichTextField()
@@ -48,6 +49,7 @@ class Quote(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     author = models.CharField(max_length=128)
     thumbnail = models.ImageField(upload_to='media/quotes', null=False, blank=False)
@@ -66,6 +68,7 @@ class Category(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     title = models.CharField(max_length=128)
     description = RichTextField()
@@ -88,6 +91,7 @@ class Book(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     title =  models.CharField(max_length=128)
     category =  models.ManyToManyField(Category, related_name="books")
@@ -112,6 +116,7 @@ class News(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     title = models.CharField(max_length=128)
     description = RichTextField()
@@ -134,6 +139,7 @@ class Reviewed_Book(models.Model):
     STATUS_CHOICES = (
         ('d', 'draft'),
         ('p', 'publish'),
+        ('s', 'send_to_admin')
     )
     title = models.CharField(max_length=128)
     author =  models.ManyToManyField(Author, related_name="reviewed_books")
@@ -178,6 +184,7 @@ class Comment(models.Model):
     user = models.ForeignKey(User, related_name="comments", on_delete=models.CASCADE)
     book = models.ForeignKey(Book, related_name="comments", on_delete=models.CASCADE)
     content = RichTextField()
+    comments_reply = models.ManyToManyField('Comment', blank=True)
     reply_to = models.ForeignKey('Comment', related_name="comments", blank=True, null=True, on_delete=models.CASCADE)
     like = models.IntegerField(default=0)
     dis_like = models.IntegerField(default=0)
@@ -196,3 +203,13 @@ class Like(models.Model):
     user = models.ForeignKey(User, related_name="likes", on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, related_name="likes", on_delete=models.CASCADE)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
+
+
+
+class Report(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    cause = models.TextField()
+
+    def __str__(self):
+        return self.user.username

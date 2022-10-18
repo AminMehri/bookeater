@@ -18,5 +18,9 @@ export default {
 
 
 <style scoped>
-
+@media screen and (max-width: 450px) {
+	.badge{
+		width: 50% !important;
+	}
+}
 </style>

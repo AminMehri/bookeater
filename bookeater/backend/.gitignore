@@ -1,0 +1,6 @@
+.env
+nginx/cert.pem
+nginx/key.pem
+venv
+venv/
+debugDB/.env

@@ -236,6 +236,18 @@ const routes = [
     meta: { loginRedirect: true }
   },
   {
+    path: '/dj-rest-auth/password/reset/confirm/:uid/:token',
+    name: 'password_reset_confirm',
+    component: Password_Reset_Confirm,
+    meta: { loginRedirect: true }
+  },
+  {
+    path: '/dj-rest-auth/password/reset/confirm/:uid/:token',
+    name: 'password_reset_confirm',
+    component: Password_Reset_Confirm,
+    meta: { loginRedirect: true }
+  },
+  {
     path: '/:pathMatch(.*)*', 
     name: 'not_found',
     component: Path_Not_Found

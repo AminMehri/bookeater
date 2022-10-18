@@ -24,8 +24,6 @@ export default {
 		const store = useStore()
     	const route = useRoute()
 		const router = useRouter()
-		
-		document.title = "Amin mehri"
 
 		onMounted(() => {
 			store.dispatch('onStart')

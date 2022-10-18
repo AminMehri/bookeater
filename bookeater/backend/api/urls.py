@@ -43,6 +43,9 @@ urlpatterns = [
     path('AddReviewedBookPanel/', views.AddReviewedBookPanel.as_view(), name="add_reviewed_book_panel"),
     path('AddNewsPanel/', views.AddNewsPanel.as_view(), name="add_news_panel"),
     path('AddQuotePanel/', views.AddQuotePanel.as_view(), name="add_quote_panel"),
+    path('AddReport/', views.AddReport.as_view(), name="add_report"),
+    path('ShowUserVotes/', views.ShowUserVotes.as_view(), name="show_user_votes"),
+    path('Search/', views.Search.as_view(), name="search"),
 
     path('ShowSingleBookEditPanel/', views.ShowSingleBookEditPanel.as_view(), name="show_single_book_edit_panel"),
     path('ShowSingleAuthorEditPanel/', views.ShowSingleAuthorEditPanel.as_view(), name="show_single_author_edit_panel"),

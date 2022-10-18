@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
     <div class="row g-0">
         <div class="col-lg-8 col-md-9 col-sm-10 mx-auto mt-3">
 
@@ -6,7 +11,7 @@
                 <div class="card p-md-4 text-dark">
                     <div class="row g-0" id="category-card">
                         <div class="col-md-4">
-                            <img :src="`http://127.0.0.1:8000/media${book.thumbnail}`" class="img-fluid rounded w-100" width="200px" alt="...">
+                            <img :src="`https://api.bookeater.ir/media${book.thumbnail}`" class="img-fluid rounded w-100" width="200px" :alt="`${book.title}`" :title="`${book.title}`">
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
@@ -32,9 +37,31 @@
 <script>
 import { ref } from "vue";
 import axios from 'axios'
+import { useMeta } from 'vue-meta'
 
-export default{
+export default {
     setup() {
+        useMeta({
+            title: "نقد کتاب | کتاب خوار",
+            description: "نقد و بررسی کتاب ها در کتاب خوار, از زیر و بم کتابی که میخوانید باخبر باشید.",
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه, دسته بندی های کتاب",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: "https://bookeater.ir/reviewed-books",
+            'og:type': "reviewed-books-bookeater",
+            'og:title': "bookeater",
+            'og:description': "نقد و بررسی کتاب ها در کتاب خوار, از زیر و بم کتابی که میخوانید باخبر باشید.",
+            'og:site_name': "کتاب خوار|نقد کتاب",
+            'og:url': "https://bookeater.ir/reviewed-books",
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "کتاب خوار|نقد کتاب",
+            'twitter:description': "نقد و بررسی کتاب ها در کتاب خوار, از زیر و بم کتابی که میخوانید باخبر باشید.",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
 
         let books = ref('')
 

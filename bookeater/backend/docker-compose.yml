@@ -1,45 +1,17 @@
 version: '3'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/backend
-      - backend_static_volume:/backend/static
-      - backend_media_volume:/backend/media
-    restart: always
-    ports:
-      - "8000:8000"
-    networks:
-      - backend_network
-      - nginx_network
-    depends_on:
-      - backend_db
-  backend_db:
+  test_db:
     image: postgres:latest
-    container_name: backend_db
+    container_name: test_db
     volumes:
-      - backend_db:/var/lib/postgresql/data
+      - test_volume:/var/lib/postgresql/data
     restart: always
     env_file: .env
     ports:
       - "5432:5432"
-    networks:
-      - backend_network
 
 volumes:
-  backend_db:
+  test_volume:
     external: true
-  backend_static_volume:
-    external: true
-  backend_media_volume:
-    external: true
-networks:
-  backend_network:
-    external: true
-  nginx_network:
-    external: true
-
 

@@ -1,5 +1,9 @@
 <template>
 
+	<metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
 	<div class="Home">
 		<div class="row g-0">
 
@@ -8,11 +12,7 @@
 
 				<div class="alert alert-light text-center h4"><span>جدیدترین خبرها</span></div>
 
-				<svg v-if="loading" class="w-100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-					<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-					<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-					</path>
-				</svg>
+				<InsideLoading v-if="loading"/>
 
 				<router-link v-for="n in news" :to="`/news/${n.slug}`" class="text-light">
 					<div class="card-body">
@@ -38,21 +38,18 @@
 					<div class="carousel-inner">
 
 						<div class="carousel-item active">
-							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
-							<div class="carousel-caption text-dark">
-							</div>
+							<img src="@/assets/1.jpg" class="d-block w-100" height="500px" alt="" title="">
+							<div class="carousel-caption text-dark"></div>
 						</div>
 
 						<div class="carousel-item">
-							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
-							<div class="carousel-caption text-dark">
-							</div>
+							<img src="@/assets/2.jpg" class="d-block w-100" height="500px" alt="" title="">
+							<div class="carousel-caption text-dark"></div>
 						</div>
 
 						<div class="carousel-item">
-							<img src="https://picsum.photos/800/500" class="d-block w-100" height="500px">
-							<div class="carousel-caption text-dark">
-							</div>
+							<img src="@/assets/3.jpg" class="d-block w-100" height="500px" alt="" title="">
+							<div class="carousel-caption text-dark"></div>
 						</div>
 
 					</div>
@@ -77,13 +74,9 @@
 			<div class="col-md-5 mx-auto">
 				<div class="d-flex mt-5">
 
-					<svg v-if="loading2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-					<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-					<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-					</path>
-				</svg>
+					<InsideLoading v-if="loading2"/>
 						
-					<div class="img-fluid mx-3"><img :src="`http://127.0.0.1:8000/media${quotes.thumbnail}`" class="rounded-circle" height="100" width="100"></div>
+					<div class="img-fluid mx-3"><img :src="`https://api.bookeater.ir/media${quotes.thumbnail}`" class="rounded-circle" height="100" width="100" :alt="`${quotes.author}`" :title="`${quotes.author}`"></div>
 					
 					<div class="text-light">
 						<h4>{{quotes.author}}</h4>
@@ -99,7 +92,7 @@
 		<!-- Modal star rating book -->
 		<div class="modal fade w-100" id="staticBackdrop" tabindex="-1">
 			<div class="modal-dialog modal-dialog-centered">
-				<div class="modal-content bg-dark p-3">
+				<div class="modal-content bg-dark p-sm-3 p-0">
 					<div class="modal-body mx-auto text-center">
 						<div class="mx-auto star-rating text-white fs-4">
 							<span @click="sendRate(1)" class="fa fa-star"></span>
@@ -132,17 +125,13 @@
 				navigation
 				>
 
-				<svg v-if="loading3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-					<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-					<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-					</path>
-				</svg>
+				<InsideLoading v-if="loading3"/>
 				
 				<swiper-slide v-for="book in bestBooks" class="position-relative">
 					<span @click="addOrRemoveFromReadlist(book.slug)" v-if="book.in_readlist" class="readlist-cursor position-absolute" style="top: 0rem; left: 0rem; z-index: 5;"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-bookmark-plus-fill" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm6.5-11a.5.5 0 0 0-1 0V6H6a.5.5 0 0 0 0 1h1.5v1.5a.5.5 0 0 0 1 0V7H10a.5.5 0 0 0 0-1H8.5V4.5z"/></svg></span>
 					<span @click="addOrRemoveFromReadlist(book.slug)" v-if="!book.in_readlist" class="readlist-cursor position-absolute" style="top: 0rem; left: 0rem; z-index: 5;"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-bookmark-plus" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/><path d="M8 4a.5.5 0 0 1 .5.5V6H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V7H6a.5.5 0 0 1 0-1h1.5V4.5A.5.5 0 0 1 8 4z"/></svg></span>
 					<router-link :to="`/book/${book.slug}`">
-						<div class="profile-card-2"><img :src="`http://127.0.0.1:8000/media${book.thumbnail}`" class="img img-responsive">
+						<div class="profile-card-2"><img :src="`https://api.bookeater.ir/media${book.thumbnail}`" class="img img-responsive" :alt="`${book.title}`" :title="`${book.title}`">
 							<div class="book-name">{{book.title}}</div>
 							<div class="mx-auto book-star">
 								<span class="fw-bold ms-1">{{book.user_score}}</span>
@@ -162,15 +151,11 @@
 			<section class="container my-5">
 				<div class="row d-flex">
 
-					<svg v-if="loading4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-						<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-						<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-						</path>
-					</svg>
+					<InsideLoading v-if="loading4"/>
 					
 					<div v-for="a in popularCategories" class="col-lg-3 col-md-3 col-sm-4 col-6 text-center mb-3">
 						<router-link :to="`/category/${a.slug}`" class="text-decoration-none">
-							<img class="rounded-circle mb-2 w-100 image-hover " :src="`http://127.0.0.1:8000/media${a.thumbnail}`" width="200px">
+							<img class="rounded-circle mb-2 w-100 image-hover " :src="`https://api.bookeater.ir/media${a.thumbnail}`" width="200px" :alt="`${a.title}`" :title="`${a.title}`">
 							<strong class="text-light d-block h5">{{a.title}}</strong>
 						</router-link>
 						
@@ -187,13 +172,9 @@
 				<div class="col-md-5 mx-auto">
 					<div class="d-flex mt-5">
 
-						<svg v-if="loading2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-							<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-							<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-							</path>
-						</svg>
+						<InsideLoading v-if="loading2"/>
 							
-						<div class="img-fluid mx-3"><img :src="`http://127.0.0.1:8000/media${quotes2.thumbnail}`" class="rounded-circle" height="100" width="100"></div>
+						<div class="img-fluid mx-3"><img :src="`https://api.bookeater.ir/media${quotes2.thumbnail}`" class="rounded-circle" height="100" width="100" :alt="`${quotes2.author}`" :title="`${quotes2.author}`"></div>
 						
 						<div class="text-light">
 							<h4>{{quotes2.author}}</h4>
@@ -214,17 +195,13 @@
 				navigation
 				>
 
-				<svg v-if="loading5" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-					<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-					<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-					</path>
-				</svg>
+				<InsideLoading v-if="loading5"/>
 
 				<swiper-slide v-for="book in mostRatedBooks" class="position-relative">
 					<span @click="addOrRemoveFromReadlist(book.slug)" v-if="book.in_readlist" class="readlist-cursor position-absolute" style="top: 0rem; left: 0rem; z-index: 5;"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-bookmark-plus-fill" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm6.5-11a.5.5 0 0 0-1 0V6H6a.5.5 0 0 0 0 1h1.5v1.5a.5.5 0 0 0 1 0V7H10a.5.5 0 0 0 0-1H8.5V4.5z"/></svg></span>
 					<span @click="addOrRemoveFromReadlist(book.slug)" v-if="!book.in_readlist" class="readlist-cursor position-absolute" style="top: 0rem; left: 0rem; z-index: 5;"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-bookmark-plus" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/><path d="M8 4a.5.5 0 0 1 .5.5V6H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V7H6a.5.5 0 0 1 0-1h1.5V4.5A.5.5 0 0 1 8 4z"/></svg></span>
 					<router-link :to="`/book/${book.slug}`">
-						<div class="profile-card-2"><img :src="`http://127.0.0.1:8000/media${book.thumbnail}`" class="img img-responsive">
+						<div class="profile-card-2"><img :src="`https://api.bookeater.ir/media${book.thumbnail}`" class="img img-responsive" :alt="`${book.title}`" :title="`${book.title}`">
 							<div class="book-name">{{book.title}}</div>
 							<div class="mx-auto book-star">
 								<span class="fw-bold ms-1">{{book.user_score}}</span>
@@ -245,15 +222,11 @@
 			<section class="container mt-5">
 				<div class="row d-flex">
 
-					<svg v-if="loading6" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; background: rgb(0, 0, 0); display: block;" width="184px" height="184px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-						<path d="M16 50A34 34 0 0 0 84 50A34 37.6 0 0 1 16 50" fill="#ffc200" stroke="none">
-						<animateTransform attributeName="transform" type="rotate" dur="0.8695652173913042s" repeatCount="indefinite" keyTimes="0;1" values="0 50 51.8;360 50 51.8"></animateTransform>
-						</path>
-					</svg>
+					<InsideLoading v-if="loading6"/>
 					
 					<div v-for="a in popularAuthors" class="col-lg-3 col-md-3 col-sm-4 col-6 text-center mb-3">
 						<router-link :to="`/author/${a.slug}`" class="text-decoration-none">
-							<img class="rounded-circle mb-2 w-100 image-hover-reverse" :src="`http://127.0.0.1:8000/media${a.thumbnail}`" width="200px">
+							<img class="rounded-circle mb-2 w-100 image-hover-reverse" :src="`https://api.bookeater.ir/media${a.thumbnail}`" width="200px" :alt="`${a.full_name}`" :title="`${a.full_name}`">
 							<strong class="text-light d-block h5">{{a.full_name}}</strong>
 						</router-link>
 						
@@ -275,6 +248,8 @@
 import { ref } from "vue";
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { useMeta } from 'vue-meta'
+import InsideLoading from '@/components/InsideLoading.vue'
 
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -287,9 +262,32 @@ export default {
 	components: {
 		Swiper,
 		SwiperSlide,
+		InsideLoading,
 	},
 
 	setup() {
+		useMeta({
+            title: "کتاب خوار | نقد, رای, برترین ها و هر آنچه لازم است درباره کتاب بدانید",
+            description: "دیدن بهترین و پربازدید ترین و برترین نقد ها در پلتفرم کاربر محور کتاب خوار. با کتاب خوار خوره کتاب باشید",
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه, دسته بندی های کتاب, برترین کتاب ها",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: "https://bookeater.ir/",
+            'og:type': "bookeater",
+            'og:title': "bookeater",
+            'og:description': "دیدن بهترین و پربازدید ترین و برترین نقد ها در پلتفرم کاربر محور کتاب خوار. با کتاب خوار خوره کتاب باشید",
+            'og:site_name': "کتاب خوار",
+            'og:url': "https://bookeater.ir/",
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "کتاب خوار | نقد, رای, برترین ها و هر آنچه لازم است درباره کتاب بدانید",
+            'twitter:description': "دیدن بهترین و پربازدید ترین و برترین نقد ها در پلتفرم کاربر محور کتاب خوار. با کتاب خوار خوره کتاب باشید",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
+
 		let swiperOptions = {
 			breakpoints: {       
 				320: {       
@@ -424,7 +422,16 @@ export default {
 				slug: slugForRate.value
 			})
 			.then(response => {
-				justGetData()
+				let targetBestBooks = ref(bestBooks.value.filter((r) => r.slug == slugForRate.value))
+				let targetMostRatedBooks = ref(mostRatedBooks.value.filter((r) => r.slug == slugForRate.value))
+				if(targetBestBooks.value == 0){
+					targetMostRatedBooks.value[0].user_score = rate_number.value
+				} else if(targetMostRatedBooks.value == 0){
+					targetBestBooks.value[0].user_score = rate_number.value
+				} else{
+					targetMostRatedBooks.value[0].user_score = rate_number.value
+					targetBestBooks.value[0].user_score = rate_number.value
+				}
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -436,36 +443,22 @@ export default {
 
         }
 
-
-        function justGetData(){
-
-            axios
-			.get('ShowBestBooks/')
-			.then(response => {
-				bestBooks.value = response.data.data
-			})
-			.catch(error => {
-				console.log(error.response);
-			})
-
-			axios
-			.get('ShowMostRatedBooks/')
-			.then(response => {
-				mostRatedBooks.value = response.data.data
-			})
-			.catch(error => {
-				console.log(error.response);
-			})
-        }
-
-
 		function addOrRemoveFromReadlist(sl){
 			axios
 			.post('AddOrRemoveFromReadlist/', {
 				'slug': sl
 			})
 			.then(response => {
-				justGetData()
+				let targetBestBooks = ref(bestBooks.value.filter((r) => r.slug == sl))
+				let targetMostRatedBooks = ref(mostRatedBooks.value.filter((r) => r.slug == sl))
+				if(targetBestBooks.value == 0){
+					targetMostRatedBooks.value[0].in_readlist = !targetMostRatedBooks.value[0].in_readlist
+				} else if(targetMostRatedBooks.value == 0){
+					targetBestBooks.value[0].in_readlist = !targetBestBooks.value[0].in_readlist
+				} else{
+					targetMostRatedBooks.value[0].in_readlist = !targetMostRatedBooks.value[0].in_readlist
+					targetBestBooks.value[0].in_readlist = !targetBestBooks.value[0].in_readlist
+				}
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -699,5 +692,6 @@ export default {
 .star-rating > span:hover{
 	cursor: pointer;
 }
+
 
 </style>

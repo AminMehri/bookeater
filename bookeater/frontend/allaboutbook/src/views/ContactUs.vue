@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+    
     <div class="container ContactUs">
         <div class="row">
             <div class="col-md-8 mx-auto">
@@ -90,10 +95,31 @@
 import Swal from 'sweetalert2'
 import { ref } from "vue";
 import axios from 'axios'
+import { useMeta } from 'vue-meta'
 
-
-export default{
-    setup() {
+export default {
+    setup () {
+        useMeta({
+            title: "تماس با ما - کتاب خوار",
+            description: "سایت کتاب محور کتاب خوار نیاز شما را برای هر آنچه که لازم است درباره کتاب اعم از نویسنده آن و دسته بندی اش و همچنین نقد آن بدانید را برآورده میکند. با کتاب خوار خوره کتاب شوید.",
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: "https://bookeater.ir/contact-us",
+            'og:type': "contact-bookeater",
+            'og:title': "bookeater",
+            'og:description': "سایت کتاب محور کتاب خوار نیاز شما را برای هر آنچه که لازم است درباره کتاب اعم از نویسنده آن و دسته بندی اش و همچنین نقد آن بدانید را برآورده میکند. با کتاب خوار خوره کتاب شوید.",
+            'og:site_name': "کتاب خوار",
+            'og:url': "https://bookeater.ir/contact-us",
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "کتاب خوار",
+            'twitter:description': "سایت کتاب محور کتاب خوار نیاز شما را برای هر آنچه که لازم است درباره کتاب اعم از نویسنده آن و دسته بندی اش و همچنین نقد آن بدانید را برآورده میکند. با کتاب خوار خوره کتاب شوید.",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
 
         let fullName = ref('')
         let email = ref('')

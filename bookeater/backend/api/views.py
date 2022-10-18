@@ -12,6 +12,11 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from .permission import IsAuthor
 from jalali_date import datetime2jalali, date2jalali
+from django.db.models import Q
+
+
+
+base_url = 'https://bookeater.ir/' 
 
 
 
@@ -252,7 +257,10 @@ class ShowSingleNews(APIView):
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
-            
+        
+        # just check for existing
+        get_object_or_404(News, slug=slug, status='p')
+
         news = News.objects.filter(status='p', slug=slug)
 
         data = []
@@ -263,6 +271,8 @@ class ShowSingleNews(APIView):
                 'image': n.image.url,
                 'date': datetime2jalali(n.date).strftime('14%y/%m/%d _ %H:%M'),
             })
+        
+        # another news
         another_news = News.objects.filter(status='p')[:5]
         another_news_data = []
         for n in another_news:
@@ -271,6 +281,7 @@ class ShowSingleNews(APIView):
                 'slug': n.slug,
             })
         
+        # delete duplicate news from another news
         index = 0
         for a in another_news_data:
             if len(data) > 0:
@@ -296,7 +307,9 @@ class ShowSingleBook(APIView):
 
         id = self.request.user.id
 
-        # book_detail   
+        # just check for existing
+        get_object_or_404(Book, slug=slug, status='p')   
+
         books = Book.objects.filter(status='p', slug=slug)
 
         data = []
@@ -364,6 +377,7 @@ class ShowSingleBook(APIView):
             })
             user_score = ''
         
+        # delete duplicate book from related book
         index = 0
         for a in related_books_data:
             if len(data) > 0:
@@ -388,6 +402,7 @@ class ShowSingleBook(APIView):
                 'thumbnail': book.thumbnail.url,
             })
         
+        # delete duplicate book from another book from this author
         index = 0
         for a in author_books_data:
             if len(data) > 0:
@@ -416,6 +431,7 @@ class ShowSingleCategory(APIView):
             
         category = get_object_or_404(Category, slug=slug, status='p')
 
+        # book with this specific category
         books = category.books.filter(status='p')
 
         books_data = []
@@ -446,6 +462,7 @@ class ShowSingleCategory(APIView):
             })
             user_score = ''
 
+        # category information
         category_data = [{
             'title': category.title,
             'content': category.content,
@@ -472,36 +489,18 @@ class ShowSingleAuthor(APIView):
 
         author = get_object_or_404(Author, status='p', slug=slug)
 
+        # book that it author is this author
         books = author.books.filter(status='p')
 
         books_data = []
-        for book in books:
-
-            # check : this book exit in readlist or not
-            in_readlist = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(status='p', slug=book.slug)):
-                    in_readlist = True
-
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
-
-            
+        for book in books:    
             books_data.append({
                 'title': book.title,
-                'description': book.description,
-                'score': book.score,
-                'user_score': user_score,
                 'slug': book.slug,
                 'thumbnail': book.thumbnail.url,
-                'in_readlist': in_readlist,
             })
-            user_score = ''
         
+        # author information
         author_data = [{
             'full_name': author.full_name,
             'content': author.content,
@@ -523,7 +522,10 @@ class ShowSingleReviewedBook(APIView):
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
-            
+        
+        # just check for existing
+        get_object_or_404(Reviewed_Book, slug=slug, status='p')
+
         books = Reviewed_Book.objects.filter(status='p', slug=slug)
 
         reviewed_books_data = []
@@ -538,6 +540,7 @@ class ShowSingleReviewedBook(APIView):
                 'critic_username': book.critic.username,
             })
 
+        # some reviewed book for suggest
         reviewed = Reviewed_Book.objects.filter(status='p')
         
         related_reviewed_data = []
@@ -547,6 +550,7 @@ class ShowSingleReviewedBook(APIView):
                 'slug': r.slug,
             })
         
+        # delete duplicate reviewed book from another reviewed book
         index = 0
         for a in related_reviewed_data:
             if len(reviewed_books_data) > 0:
@@ -554,7 +558,6 @@ class ShowSingleReviewedBook(APIView):
                     del related_reviewed_data[index]
             
             index += 1
-
 
         return Response({'status': 'ok', 'reviewed_books_data': reviewed_books_data, 'related_reviewed_data': related_reviewed_data}, status=status.HTTP_200_OK)
 
@@ -605,10 +608,12 @@ class UpdateProfileInformation(APIView):
 
         username = self.request.user.username
 
+        # set all information exept image and thumbnail
         User.objects.filter(username=username).update(first_name=first_name, last_name=last_name,age=age, sex=sex, public_score=public_score)
 
         b = get_object_or_404(User, username=username)
 
+        # image and thumbnail is optional so we check then set them
         if(image == None):
             pass
         else:
@@ -659,9 +664,9 @@ class ShowReadList(APIView):
                     'thumbnail': book.thumbnail.url,
                     'user_score': user_score,
                     'score': book.score,
+                    'rates': book.rates,
                     'in_readlist': in_readlist,
                 })
-
                 user_score = ''
 
         return Response({'status': 'ok', 'data': data, 'username': username}, status=status.HTTP_200_OK)
@@ -704,38 +709,42 @@ class MakeRate(APIView):
         id = self.request.user
         book = get_object_or_404(Book, status='p', slug=slug)
         
+        # check for existing score by this user for this book
         if(models.Score.objects.filter(user=id).filter(book=book)):
+
+            # update user score
             models.Score.objects.filter(user=id).filter(book=book).update(user=id, book=book, user_score=user_score)
         else:
+            # make user score
             models.Score.objects.create(user=id, book=book, user_score=user_score)
         
-        # save book score
         books = Book.objects.filter(status='p', slug=slug)
 
         for book in books:
             userScore = Score.objects.filter(book=book.id)
 
-            # score
+            # update book rates and book score 
+
             score_data = [] 
             for score in userScore:
                 score_data.append({
                     'user_score': score.user_score
                 })
             
-            sc = 0
-            count = 0
-            for da in score_data:
-                sc = sc + da['user_score']
-                count = count + 1
+            total_score = 0
+            number_of_score = 0
+            for score in score_data:
+                total_score = total_score + score['user_score']
+                number_of_score = number_of_score + 1
             
-            if(count == 0):
-                sc_kol = 'N/A'
+            if(number_of_score == 0):
+                average_score = 'N/A'
             else:
-                sc_kol = sc / count
-                sc_kol = "{:.1f}".format(sc_kol)
+                average_score = total_score / number_of_score
+                average_score = "{:.1f}".format(average_score)
 
             # update book score
-            Book.objects.filter(status='p', slug=book.slug).update(score=sc_kol)
+            Book.objects.filter(status='p', slug=book.slug).update(score=average_score)
 
             # update rates
             rates = Score.objects.filter(book=book.id).count()
@@ -805,10 +814,11 @@ class MakeComment(APIView):
         user = self.request.user
         book = get_object_or_404(Book, status='p', slug=slug)
 
-
+        # id is for reply comment (reply to comment with that id). if id was 0 then the comment is not a reply comment.
         if(id):
             reply_to = get_object_or_404(Comment, id=id)
-            Comment.objects.create(user=user, book=book, content=content, reply_to=reply_to)
+            cum = Comment.objects.create(user=user, book=book, content=content, reply_to=reply_to)
+            reply_to.comments_reply.add(cum.id)
         else:
             Comment.objects.create(user=user, book=book, content=content)
 
@@ -816,7 +826,7 @@ class MakeComment(APIView):
 
 
 
-class ShowComment(APIView):
+class ShowComment(APIView): 
 
     def post(self, request):
 
@@ -837,11 +847,22 @@ class ShowComment(APIView):
                 'username': comment.user.get_full_name() if comment.user.get_full_name() else comment.user.username,
                 'username_slug': comment.user.username,
                 'content': comment.content,
-                'reply_to': [comment.reply_to.id, comment.reply_to.content] if comment.reply_to else 'null',
+                'comments_reply': [{
+                    
+                    'username': cum.user.get_full_name() if cum.user.get_full_name() else cum.user.username, 
+                    'username_slug': cum.user.username,
+                    'content': cum.content,
+                    'like': cum.like,
+                    'dis_like': cum.dis_like,
+                    'date': datetime2jalali(cum.date).strftime('14%y/%m/%d _ %H:%M'),
+
+                } for cum in comment.comments_reply.all()],
+                'reply_to': comment.reply_to.id if comment.reply_to else 'null',
                 'id': comment.id,
                 'like': comment.like,
                 'dis_like': comment.dis_like,
                 'date': datetime2jalali(comment.date).strftime('14%y/%m/%d _ %H:%M'),
+                'date_for_filter': datetime2jalali(comment.date).strftime('14%y%m%d%H%M'),
             })
         
         return Response({'status': 'OK', 'data': data}, status=status.HTTP_200_OK)
@@ -864,29 +885,31 @@ class LikeComment(APIView):
 
         comment = get_object_or_404(Comment, id=id)
 
+        # check user like or dislike this comment before or not
         if(Like.objects.filter(user=user).filter(comment=comment)):
 
+            # check user like this comment before or dislike it
             if(Like.objects.filter(user=user).filter(comment=comment).filter(status='l')):
 
-                likes = Like.objects.filter(comment=comment).filter(status='l').count()
-                dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
-                Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
                 return Response({'status': 'you like this comment before'})
 
             else:
+
                 Like.objects.filter(user=user, comment=comment).update(status='l')
+
+                # set total likes and dislikes for this comment
                 likes = Like.objects.filter(comment=comment).filter(status='l').count()
                 dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
                 Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
+
                 return Response({'status': 'you changed your status from dis_like to like'})
 
         else:       
             Like.objects.create(user=user, comment=comment, status='l')
         
+        # set total likes for this comment
         likes = Like.objects.filter(comment=comment).filter(status='l').count()
-        dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
-        Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
-
+        Comment.objects.filter(id=id).update(like=likes)
 
         return Response({'status': 'OK'}, status=status.HTTP_200_OK) 
 
@@ -908,31 +931,31 @@ class DisLikeComment(APIView):
 
         comment = get_object_or_404(Comment, id=id)
 
+        # check user like or dislike this comment before or not
         if(Like.objects.filter(user=user).filter(comment=comment)):
 
+            # check user like this comment before or dislike it
             if(Like.objects.filter(user=user).filter(comment=comment).filter(status='d')):
 
-                likes = Like.objects.filter(comment=comment).filter(status='l').count()
-                dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
-                Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
                 return Response({'status': 'you dis_like this comment before'})
 
-            elif(Like.objects.filter(user=user).filter(comment=comment).filter(status='l')):
-
+            else:
+                
                 Like.objects.filter(user=user, comment=comment).update(status='d')
+
+                # set total likes and dislikes for this comment
                 likes = Like.objects.filter(comment=comment).filter(status='l').count()
                 dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
                 Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
+
                 return Response({'status': 'you changed your status from like to dis_like'})
 
         else:
-
             Like.objects.create(user=user, comment=comment, status='d')
         
-        likes = Like.objects.filter(comment=comment).filter(status='l').count()
+        # set total dislikes for this comment
         dis_likes = Like.objects.filter(comment=comment).filter(status='d').count()
-        Comment.objects.filter(id=id).update(like=likes, dis_like=dis_likes)
-
+        Comment.objects.filter(id=id).update(dis_like=dis_likes)
 
         return Response({'status': 'OK'}, status=status.HTTP_200_OK) 
 
@@ -963,16 +986,141 @@ class ShowUserComment(APIView):
                 'like': comment.like,
                 'dis_like': comment.dis_like,
                 'date': datetime2jalali(comment.date).strftime('14%y/%m/%d _ %H:%M'),
+                'date_for_filter': datetime2jalali(comment.date).strftime('14%y%m%d%H%M'),
             })
         
         user_images_data = [{
             'image': user.image.url if user.image else 'null',
             'thumbnail': user.thumbnail.url if user.thumbnail else 'null',
+            'full_name': user.get_full_name() if user.get_full_name() else user.username
         }]
 
-        print(user_images_data)
-
         return Response({'status': 'OK', 'data': data, 'user_images_data': user_images_data}, status=status.HTTP_200_OK) 
+
+
+
+class ShowUserVotes(APIView):
+
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        id = self.request.user.id
+
+        user = get_object_or_404(User, username=username, public_score=True)
+
+        scores = Score.objects.filter(user=user).order_by('-id')
+
+        data = []
+        for score in scores:
+
+            # check : this book exit in readlist or not
+            in_readlist = False
+            if(self.request.user.is_authenticated):
+                user = get_object_or_404(User, id=id)
+                if(user.readlist.filter(status='p', slug=score.book.slug)):
+                    in_readlist = True
+
+            # user score
+            user_score_queryset = Score.objects.filter(book=score.book.id).filter(user=id)
+            user_score = ''
+            for user in user_score_queryset:
+                user_score = user.user_score
+
+
+            data.append({
+                'title': score.book.title,
+                'description': score.book.description,
+                'slug': score.book.slug,
+                'thumbnail': score.book.thumbnail.url,
+                'user_score': user_score,
+                'score': score.book.score,
+                'rates': score.book.rates,
+                'in_readlist': in_readlist,
+                'target_user_score': score.user_score
+            })
+            user_score = ''
+
+        return Response({'status': 'OK', 'data': data}, status=status.HTTP_200_OK) 
+
+
+
+class AddReport(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        serializer = serializers.ReportSerializer(data=request.data)
+        if serializer.is_valid():
+            id = serializer.data.get('id')
+            cause = serializer.data.get('cause')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+
+        comment = get_object_or_404(Comment, id=id)
+
+        Report.objects.create(user=user, comment=comment, cause=cause)
+
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+
+class Search(APIView):
+    def post(self, request):
+
+        serializer = serializers.SlugSerializer(data=request.data)
+        if serializer.is_valid():
+            query_search = serializer.data.get('slug')
+            
+        else:
+            return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # search in author and book and reviewed book
+        results_book = Book.objects.filter(Q(title__icontains=query_search))[:3]
+        results_author = Author.objects.filter(Q(full_name__icontains=query_search))[:3]
+        results_reviewed_book = Reviewed_Book.objects.filter(Q(title__icontains=query_search))[:3]
+
+        data_book = []
+        for book in results_book:
+            data_book.append({
+                'title': book.title,
+                'slug': '/book/{}'.format(book.slug),
+                'badge': 'کتاب',
+                'author': [a.full_name for a in book.author.filter(status='p')]
+            })
+
+        data_author = []
+        for author in results_author:
+            data_author.append({
+                'title': author.full_name,
+                'slug': '/author/{}'.format(author.slug),
+                'badge': 'نویسنده'
+            })
+
+        data_reviewed_book = []
+        for reviewed_book in results_reviewed_book:
+            data_reviewed_book.append({
+                'title': reviewed_book.title,
+                'slug': '/reviewed-book/{}'.format(reviewed_book.slug),
+                'badge': 'نقد و بررسی'
+            })
+        
+        data = {
+            'results_book': data_book,
+            'results_author': data_author,
+            'results_reviewed_book': data_reviewed_book,
+        }
+
+
+        return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
 
 
 
@@ -988,21 +1136,20 @@ class SendEmail(APIView):
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
-
+        # generate a token
         unique_id = get_random_string(length=32)
 
+        # check for existing user
         if(User.objects.filter(username=username)):
             User.objects.filter(username=username).update(is_active=False, token=unique_id)
         else:
             return Response({'status': 'User is not exist'}, status=status.HTTP_404_NOT_FOUND)
             
-
-                
         subject = 'تایید ایمیل در کتاب خوار'
-        message = 'برای تایید حساب در سایت کتاب خوار خود روی لینک زیر کلیک کنید <br> http://10.8.0.9:8080/email-verify/{}'.format(unique_id)
+        message = 'برای تایید حساب در سایت کتاب خوار خود روی لینک زیر کلیک کنید <br> {}email-verify/{}'.format(base_url, unique_id)
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [email, ]
-        send_mail( subject, message, email_from, recipient_list )
+        send_mail( subject, '', email_from, recipient_list , html_message=message)
 
         return Response({'status': 'OK'}, status=status.HTTP_200_OK) 
 
@@ -1045,7 +1192,9 @@ class ShowBooksPanel(APIView):
 
         data = []
         for book in books:
-            if book.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if book.status == 'd' or book.status == 's':
                 if book.written_by.username != username:
                     continue
 
@@ -1077,7 +1226,9 @@ class ShowNewsPanel(APIView):
 
         data = []
         for n in news:
-            if n.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if n.status == 'd' or n.status == 's':
                 if n.written_by.username != username:
                     continue
 
@@ -1106,7 +1257,9 @@ class ShowQuotesPanel(APIView):
 
         data = []
         for quote in quotes:
-            if quote.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if quote.status == 'd' or quote.status == 's':
                 if quote.written_by.username != username:
                     continue
 
@@ -1133,7 +1286,9 @@ class ShowCategoriesPanel(APIView):
 
         data = []
         for category in categories:
-            if category.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if category.status == 'd' or category.status == 's':
                 if category.written_by.username != username:
                     continue
 
@@ -1161,7 +1316,9 @@ class ShowAuthorsPanel(APIView):
 
         data = []
         for author in authors:
-            if author.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if author.status == 'd' or author.status == 's':
                 if author.written_by.username != username:
                     continue
 
@@ -1190,7 +1347,9 @@ class ShowReviewedBooksPanel(APIView):
 
         data = []
         for book in books:
-            if book.status == 'd':
+
+            # for show book to author, he is must be the writer of the book or book status should be publish
+            if book.status == 'd' or book.status == 's':
                 if book.critic.username != username:
                     continue
 
@@ -1208,7 +1367,11 @@ class ShowReviewedBooksPanel(APIView):
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
 
 
+
+#########################
 # create panel views
+#########################
+
 class AddBookPanel(APIView):
     permission_classes = [IsAuthenticated&IsAuthor]
 
@@ -1220,23 +1383,33 @@ class AddBookPanel(APIView):
             slug = serializer.data.get('slug')
             description = serializer.data.get('description')
             content = serializer.data.get('content')
+            stat = serializer.data.get('status')
             author = serializer.data.get('author')
             category = serializer.data.get('category')
             thumbnail = request.FILES.get('thumbnail')
             image = request.FILES.get('image')
 
+            # check for correct author & category
             if author[0] == 'undefined' or category[0] == 'undefined' or author[0] == '' or category[0] == '':
                 return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            # check for correct status. the writer can't choose the publish status
+            if stat != 'd':
+                if stat != 's':
+                    return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+                
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
                 
         user = self.request.user
 
+        # check for existing book with this slug
         if Book.objects.filter(slug=slug):
+
+            # if book status would be draft, the writer can update the information
             if Book.objects.filter(written_by=user).filter(status='d'):
 
-                Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
                 sample = get_object_or_404(Book, slug=slug)
                 sample.thumbnail.save(thumbnail.name, thumbnail)
                 sample.image.save(image.name, image)
@@ -1250,7 +1423,9 @@ class AddBookPanel(APIView):
             else:
                 return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
-            b = Book(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+
+            # create new book 
+            b = Book(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
             b.thumbnail.save(thumbnail.name, thumbnail)
             b.image.save(image.name, image)
             for a in author[0].split(','):
@@ -1274,22 +1449,32 @@ class AddAuthorPanel(APIView):
             slug = serializer.data.get('slug')
             description = serializer.data.get('description')
             content = serializer.data.get('content')
+            stat = serializer.data.get('status')
             category = serializer.data.get('category')
             thumbnail = request.FILES.get('thumbnail')
             image = request.FILES.get('image')
 
+            # check for correct category
             if category[0] == 'undefined' or category[0] == '':
                 return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # check for correct status. the writer can't choose the publish status
+            if stat != 'd':
+                if stat != 's':
+                    return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
         user = self.request.user
 
+        # check for existing author with this slug
         if Author.objects.filter(slug=slug):
+
+            # if book status would be draft, the writer can update the information
             if Author.objects.filter(written_by=user).filter(status='d'):
 
-                Author.objects.filter(slug=slug).update(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                Author.objects.filter(slug=slug).update(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status=stat)
                 sample = get_object_or_404(Author, slug=slug)
                 sample.thumbnail.save(thumbnail.name, thumbnail)
                 sample.image.save(image.name, image)
@@ -1300,7 +1485,9 @@ class AddAuthorPanel(APIView):
             else:
                 return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
-            b = Author(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status='d')
+
+            # create new author 
+            b = Author(full_name=full_name, slug=slug, description=description ,content=content ,written_by=user, status=stat)
             b.thumbnail.save(thumbnail.name, thumbnail)
             b.image.save(image.name, image)
             for a in category[0].split(','):
@@ -1321,22 +1508,32 @@ class AddCategoryPanel(APIView):
             slug = serializer.data.get('slug')
             description = serializer.data.get('description')
             content = serializer.data.get('content')
+            stat = serializer.data.get('status')
             author = serializer.data.get('author')
             thumbnail = request.FILES.get('thumbnail')
             image = request.FILES.get('image')
 
+            # check for correct author
             if author[0] == 'undefined' or author[0] == '':
                 return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # check for correct status. the writer can't choose publish status
+            if stat != 'd':
+                if stat != 's':
+                    return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
         user = self.request.user
 
+        # check for existing category with this slug
         if Category.objects.filter(slug=slug):
+
+            # if category status would be draft, the writer can update the information
             if Category.objects.filter(written_by=user).filter(status='d'):
 
-                Category.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                Category.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
                 sample = get_object_or_404(Category, slug=slug)
                 sample.thumbnail.save(thumbnail.name, thumbnail)
                 sample.image.save(image.name, image)
@@ -1347,7 +1544,9 @@ class AddCategoryPanel(APIView):
             else:
                 return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
-            b = Category(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+
+            # create new category 
+            b = Category(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
             b.thumbnail.save(thumbnail.name, thumbnail)
             b.image.save(image.name, image)
             for a in author[0].split(','):
@@ -1368,23 +1567,33 @@ class AddReviewedBookPanel(APIView):
             slug = serializer.data.get('slug')
             description = serializer.data.get('description')
             content = serializer.data.get('content')
+            stat = serializer.data.get('status')
             thumbnail = request.FILES.get('thumbnail')
             image = request.FILES.get('image')
             author = serializer.data.get('author')
             category = serializer.data.get('category')
 
+            # check for correct author & category
             if author[0] == 'undefined' or category[0] == 'undefined' or author[0] == '' or category[0] == '':
                 return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # check for correct status. the writer can't choose publish status
+            if stat != 'd':
+                if stat != 's':
+                    return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
                 
         user = self.request.user
 
+        # check for existing reviewed book with this slug
         if Reviewed_Book.objects.filter(slug=slug):
+
+            # if reviewed book status would be draft, the writer can update the information
             if Reviewed_Book.objects.filter(critic=user).filter(status='d'):
 
-                Reviewed_Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,critic=user, status='d')
+                Reviewed_Book.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,critic=user, status=stat)
                 sample = get_object_or_404(Reviewed_Book, slug=slug)
                 sample.thumbnail.save(thumbnail.name, thumbnail)
                 sample.image.save(image.name, image)
@@ -1398,7 +1607,9 @@ class AddReviewedBookPanel(APIView):
             else:
                 return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
-            b = Reviewed_Book(title=title, slug=slug, description=description ,content=content ,critic=user, status='d')
+
+            # create new reviewed book 
+            b = Reviewed_Book(title=title, slug=slug, description=description ,content=content ,critic=user, status=stat)
             b.thumbnail.save(thumbnail.name, thumbnail)
             b.image.save(image.name, image)
             for a in author[0].split(','):
@@ -1422,24 +1633,35 @@ class AddNewsPanel(APIView):
             slug = serializer.data.get('slug')
             description = serializer.data.get('description')
             content = serializer.data.get('content')
+            stat = serializer.data.get('status')
             image = request.FILES.get('image')
+
+            # check for correct status. the writer can't choose publish status
+            if stat != 'd':
+                if stat != 's':
+                    return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
             
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
         user = self.request.user
 
+        # check for existing news with this slug
         if News.objects.filter(slug=slug):
+
+            # if news status would be draft, the writer can update the information
             if News.objects.filter(written_by=user).filter(status='d'):
 
-                News.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+                News.objects.filter(slug=slug).update(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
                 sample = get_object_or_404(News, slug=slug)
                 sample.image.save(image.name, image)
 
             else:
                 return Response({'status': 'this slug already exist'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
-            b = News(title=title, slug=slug, description=description ,content=content ,written_by=user, status='d')
+
+            # create new news
+            b = News(title=title, slug=slug, description=description ,content=content ,written_by=user, status=stat)
             b.image.save(image.name, image)
 
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
@@ -1462,6 +1684,7 @@ class AddQuotePanel(APIView):
         
         user = self.request.user
 
+        # create new quote
         b = Quote(author=author, description=description ,written_by=user, status='d')
         b.thumbnail.save(thumbnail.name, thumbnail)
 
@@ -1487,6 +1710,7 @@ class ShowSingleBookEditPanel(APIView):
 
         username = request.user.username
 
+        # show if status is draft or the user is the writer
         if books.status == 'd' and books.written_by.username == username:
             data = []
             for b in book:
@@ -1521,6 +1745,7 @@ class ShowSingleAuthorEditPanel(APIView):
 
         username = request.user.username
 
+        # show if status is draft or the user is the writer
         if authors.status == 'd' and authors.written_by.username == username:
             data = []
             for b in author:
@@ -1555,6 +1780,7 @@ class ShowSingleCategoryEditPanel(APIView):
 
         username = request.user.username
 
+        # show if status is draft or the user is the writer
         if categories.status == 'd' and categories.written_by.username == username:
             data = []
             for b in category:
@@ -1589,6 +1815,7 @@ class ShowSingleReviewedBookEditPanel(APIView):
 
         username = request.user.username
 
+        # show if status is draft or the user is the writer
         if books.status == 'd' and books.critic.username == username:
             data = []
             for b in book:
@@ -1623,6 +1850,7 @@ class ShowSingleNewsEditPanel(APIView):
 
         username = request.user.username
 
+        # show if status is draft or the user is the writer
         if n.status == 'd' and n.written_by.username == username:
             data = []
             for b in news:

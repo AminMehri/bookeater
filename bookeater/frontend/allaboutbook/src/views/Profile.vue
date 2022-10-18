@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
     <div class="container Profile">
         <div class="row g-3">
 
@@ -115,10 +120,15 @@ import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios'
 import Swal from 'sweetalert2'
-
+import { useMeta } from 'vue-meta'
 
 export default {
-	setup() {
+    setup() {
+        useMeta({
+            robots: "noindex, nofollow",
+            googlebot: "noindex, nofollow",
+        });
+
         const store = useStore()
         const route = useRoute();
         const router = useRouter();
@@ -137,6 +147,7 @@ export default {
         let updateAge = ref('')
         let updatePublicScore = ref('')
         
+        // show profile information
         function getData(){
             axios
             .get('ShowProfile/')
@@ -148,6 +159,7 @@ export default {
                 age.value = response.data.data[0].age
                 publicScore.value = response.data.data[0].public_score
                 isAuthor.value = response.data.data[0].is_author
+                document.title = fullName.value + "|کتاب خوار"
 
                 if(sex.value == 'm'){
                     sex.value = 'مرد'
@@ -186,7 +198,7 @@ export default {
         }
 
 
-
+        // update profile information
         function updateInfo(){
             let formData = new FormData()
             let thumbnailPic = document.getElementById('inputThumbnail')

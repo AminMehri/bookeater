@@ -8,11 +8,34 @@
                 <h1>کتاب خوار</h1>
             </div>
 
-            <div class="col-md-2"></div>
+            <div class="col-md-1"></div>
 
-            <div class="col-md-4">
-                <p>خوار کتاب</p>
-                <p>در دستان شما</p>
+            <div class="col-md-5 position-relative">
+                <div class="input-group mb-2 w-100">
+                    <input type="text" v-model="titleSearch" class="form-control rounded-0" placeholder="سرچ کنید.">
+                    <button v-if="titleSearch" type="button" class="btn btn-outline-danger rounded-0" @click="titleSearch = '', searchRes = []"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="position-absolute shadow border bg-light w-100 rounded" id="search-box">
+                    <InsideLoading v-if="searchLoading"/>
+                    <div v-else-if="!searchRes[0] && titleSearch && titleSearch.length > 2">
+                        <h3 class="text-dark">نتیجه ای یافت نشد</h3>
+                    </div>
+                    <div v-else-if="titleSearch">
+                        <div class="row border border-bottom">
+
+                            <router-link v-for="a in searchRes" :to=a.slug target="_blank" class="bg-secondary d-block p-3 hover-search-result">
+                                <span class="ms-2 fw-bold text-white">{{a.title}}</span>
+                                <span v-if="a.badge == 'نقد و بررسی'" class="badge bg-danger">{{a.badge}}</span>
+                                <span v-if="a.badge == 'نویسنده'" class="badge bg-info">{{a.badge}}</span>
+                                <span v-if="a.badge == 'کتاب'" class="badge bg-warning">{{a.badge}}</span>
+                                <div>
+                                    <span v-for="b in a.author" class="text-white fs-6 ms-3">{{b}}</span>
+                                </div>
+                            </router-link>
+                
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -52,10 +75,9 @@
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav me-auto">
                     <router-link v-if="!$store.state.isAuthenticated" to="/login" class="btn btn-outline-secondary text-info nav-item nav-link">ورود به حساب کاربری</router-link>
-                    <!-- <router-link v-if="$store.state.isAuthenticated" to="/profile" class="btn btn-outline-secondary nav-item nav-link">پروفایل</router-link> -->
 
                     <div v-if="$store.state.isAuthenticated" class="dropdown dropdown-menu-start nav-item nav-link">
-                        <button class="dropbtn btn btn-outline-secondary">{{username}}</button>
+                        <button class="dropbtn btn btn-outline-secondary w-100">{{username}}</button>
                         <div class="dropdown-content">
                             <router-link to="/profile" class="btn btn-outline-secondary">اطلاعات شخصی</router-link>
                             <router-link :to="`/user/${username}`" class="btn btn-outline-secondary">فعالیت های شما</router-link>
@@ -72,13 +94,60 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref ,watch } from "vue";
 import axios from 'axios'
+import InsideLoading from '@/components/InsideLoading.vue'
 
 export default {
-	setup() {
+    components: {
+        InsideLoading
+    },
+
+	setup() {        
         let count = ref('')
         let username = ref('')
+
+        let titleSearch = ref('')
+        let searchRes = ref([])
+        let searchLoading = ref(false)
+
+        let numbersSearch = 0
+
+
+        watch([titleSearch], ()=>{
+            numbersSearch += 1
+            let currentNum = numbersSearch
+
+            setTimeout(() =>{
+
+            if(currentNum == numbersSearch && titleSearch.value.length > 2){
+                searchLoading.value = true
+                searchRes.value = []
+                axios
+                .post('Search/', {
+                    'slug': titleSearch.value
+                })
+                .then(response => {
+                    for(let a in response.data.data.results_book){
+                        searchRes.value.push(response.data.data.results_book[a])
+                    }
+                    for(let b in response.data.data.results_author){
+                        searchRes.value.push(response.data.data.results_author[b])
+                    }
+                    for(let d in response.data.data.results_reviewed_book){
+                        searchRes.value.push(response.data.data.results_reviewed_book[d])
+                    }
+                    searchLoading.value = false
+                })
+                .catch(error => {
+                    searchLoading.value = false
+                    console.log(error.response);
+                })
+            } else {
+                searchRes.value = []
+            }}, 1000)
+        })
+
 
         var prevScrollpos = window.pageYOffset;
         window.onscroll = function() {
@@ -93,12 +162,17 @@ export default {
     
 		return {
 			count,
-            username
+            username,
+            titleSearch,
+            searchRes,
+            searchLoading,
 		} 
 
     },
     watch: {
 		$route() {
+            this.titleSearch = ''
+
             if(this.$store.state.isAuthenticated){
                 axios
                 .get('ShowReadList/')
@@ -110,6 +184,13 @@ export default {
                     console.log(error.response);
                 })
             }
+
+
+            function closeOffcanvasAndNavbar (event) {
+                $('.navbar-collapse').collapse('hide');
+                $('.text-reset').click();
+            }
+            closeOffcanvasAndNavbar()
 		},
 
 	},
@@ -159,6 +240,15 @@ nav {
 
 .dropdown:hover .dropdown-content {
     display: block;
+}
+
+#search-box{
+    z-index: 9999;
+}
+
+.hover-search-result:hover{
+    background-color: rgb(72, 76, 77) !important;
+    transition-duration: 0.3s;
 }
 
 </style>

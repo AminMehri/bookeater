@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+<url>
+  <loc>https://bookeater.ir/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/about-us/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/contact-us/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/developers/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.70</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/authors/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/categories/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/news/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/reviewed-books/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/profile/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://bookeater.ir/readlist/</loc>
+  <lastmod>2022-03-11T07:55:53+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+
+
+</urlset>

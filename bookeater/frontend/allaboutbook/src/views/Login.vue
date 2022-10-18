@@ -1,4 +1,11 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
+    <div v-if="fullScreenLoading" class="fullscreen-loading">Loading&#8230;</div>
+
     <div class="Login">
         <div class="container">
 
@@ -6,7 +13,7 @@
                 <div class="col-md-6 p-5">
                     
                     <div class="text-center">
-                        <h1><span class="badge bg-warning">همه چیز درباره کتاب</span></h1>
+                        <h1><span class="badge bg-warning">کتاب خوار</span></h1>
                         <p>لطفا اطلاعات خود را وارد کنید.</p>
                     </div>
 
@@ -41,12 +48,13 @@
                                 :class="{'is-invalid':passwordE===true, 'is-valid':passwordE===false}"
                             >
 
+                            <button type="button" @click="showPassword()" class="btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg></button>
+
                             <label for="floatingPassword">password</label>
                             <div class="invalid-feedback">
                                 {{ passwordEM }}
                             </div>
                         </div>
-
 
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-outline-success my-3">ورود به حساب کاربری</button>
@@ -66,7 +74,7 @@
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
                                 </div>
                                 <div class="modal-body">
                                     <input v-model="email" class="w-100 form-control" type="text" placeholder="لطفا ایمیل خود را وارد کنید">
@@ -101,8 +109,8 @@
 
                 <div class="col-md-6 d-flex align-items-center gradient-custom-2">
                     <div class="text-white px-3 py-4 p-md-5 mx-md-4">
-                        <h4 class="mb-4">همه چیز درباره کتاب با افتخار تقدیم میکند.</h4>
-                        <p class="small mb-0">هدف از راه اندازی همه چیز درباره کتاب ترغیب ایرانیان به کتاب و کتاب خوانی است. با پیوستن به همه چیز درباره کتاب از دنیای کتاب نهایت استفاده را ببرید</p>
+                        <h4 class="mb-4">کتاب خوار با افتخار تقدیم میکند.</h4>
+                        <p class="small mb-0">هدف از راه اندازی کتاب خوار ترغیب ایرانیان به کتاب و کتاب خوانی است. با پیوستن به کتاب خوار خود را غرق در دنیای کتاب کنید.</p>
                     </div>
                 </div>
             </div>
@@ -113,16 +121,38 @@
 
 
 <script>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
+import { useMeta } from 'vue-meta'
 
-export default{
+export default {
     setup() {
+        useMeta({
+            title: "ورود به کتاب خوار",
+            description: "شما عزیزان با ورود به کتاب خوار میتوانید از خدماتی از قبیل رای به کتاب ها, کامنت, و منتشر کردن رای های خود برای دیگران بهرمند شوید.",
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه, دسته بندی های کتاب, برترین کتاب ها",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: "https://bookeater.ir/login",
+            'og:type': "login-bookeater",
+            'og:title': "bookeater",
+            'og:description': "شما عزیزان با ورود به کتاب خوار میتوانید از خدماتی از قبیل رای به کتاب ها, کامنت, و منتشر کردن رای های خود برای دیگران بهرمند شوید.",
+            'og:site_name': "ورود به کتاب خوار",
+            'og:url': "https://bookeater.ir/login",
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "ورود به کتاب خوار",
+            'twitter:description': "شما عزیزان با ورود به کتاب خوار میتوانید از خدماتی از قبیل رای به کتاب ها, کامنت, و منتشر کردن رای های خود برای دیگران بهرمند شوید.",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
+
         const store = useStore()
-        const route = useRoute()
         const router = useRouter()
 
 
@@ -136,6 +166,7 @@ export default{
         let email = ref('')
         let resetPasswordEM = ref('')
 
+        let fullScreenLoading = ref(false)
 
         function isAuthenticated(){
             if(store.state.isAuthenticated){
@@ -174,29 +205,33 @@ export default{
             }
 
             if(access){
-
+                fullScreenLoading.value = true
                 axios
-                    .post('dj-rest-auth/login/', {
-                        username: username.value,
-                        password: password.value
-                    })
-                    .then(response => {
-                        store.commit('login', response.data.access_token)
-                        router.push('/profile')
-                    })
-                    .catch(error => {
-                        if (error.response.data.non_field_errors.join(" ") == "Unable to log in with provided credentials."){
-                            usernameEM.value = "!نام کاربری یا رمزعبورتو اشتباه زدی. دقت کن"
-                        }
+                .post('dj-rest-auth/login/', {
+                    username: username.value,
+                    password: password.value
+                })
+                .then(response => {
+                    fullScreenLoading.value = false
+                    store.commit('login', response.data.access_token)
+                    router.push('/profile')
+                })
+                .catch(error => {
+                    fullScreenLoading.value = false
+                    if (error.response.data.non_field_errors.join(" ") == "Unable to log in with provided credentials."){
+                        usernameEM.value = "!نام کاربری یا رمزعبورتو اشتباه زدی. دقت کن"
+                    }
 
-                        usernameE.value = true
-                        passwordE.value = true
-                    })
+                    usernameE.value = true
+                    passwordE.value = true
+                })
 
             }
         }   
 
         function doForgetPassword(){
+            fullScreenLoading.value = true
+            document.getElementById('close-modal').click()
             axios
                 .post('dj-rest-auth/password/reset/', {
                     email: email.value,
@@ -207,8 +242,7 @@ export default{
                         title: 'هورا!!!',
                         text: 'ایمیل برای شما ارسال شد.',
                     })
-
-                    location.reload()
+                    fullScreenLoading.value = false
                 })
                 .catch(error => {
                     if(error.response.statusText == 'Bad Request'){
@@ -221,9 +255,18 @@ export default{
                         title: 'وای!!!',
                         text: resetPasswordEM.value,
                     })
-
-                    console.log(error.response.statusText)
+                    fullScreenLoading.value = false
                 })
+                email.value = ''
+        }
+
+        function showPassword() {
+            let x = document.querySelector("#floatingPassword");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
         }
         
         return{
@@ -234,9 +277,11 @@ export default{
             usernameEM,
             passwordEM,
             email,
+            fullScreenLoading,
             doLogin,
             doForgetPassword,
             isAuthenticated,
+            showPassword,
         }
     }
 }

@@ -1,17 +1,22 @@
 <template>
-    <div class="container text-center">
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
+    <div v-if="!return404" class="container text-center">
         <h1 class="mt-5">{{category.title}}</h1>
         <div class="row mt-4">
             <div class="col-md-8 mx-auto single-category p-md-4">
-                <img @click="largerImage()" :src="`http://127.0.0.1:8000/media${category.image}`" class="img-fluid mb-4" id="larger_image">
+                <img @click="largerImage()" :src="`https://api.bookeater.ir/media${category.image}`" class="img-fluid mb-4" id="larger_image" :alt="`${category.title}`" :title="`${category.title}`">
 
-                <p v-html="category.content"></p>
+                <p id="content_category" v-html="category.content"></p>
 
 
                 <!-- Modal star rating book -->
                 <div class="modal fade w-100" id="staticBackdrop" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content bg-dark p-5">
+                        <div class="modal-content bg-dark p-sm-3 p-0">
                             <div class="modal-body mx-auto text-center">
                                 <div class="mx-auto star-rating text-white fs-4">
                                     <span @click="sendRate(1)" class="fa fa-star"></span>
@@ -43,7 +48,7 @@
                         <span @click="addOrRemoveFromReadlist(book.slug)" v-if="!book.in_readlist" class="readlist-cursor position-absolute" style="top: 0rem; left: 0rem; z-index: 5;"><svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-bookmark-plus" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/><path d="M8 4a.5.5 0 0 1 .5.5V6H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V7H6a.5.5 0 0 1 0-1h1.5V4.5A.5.5 0 0 1 8 4z"/></svg></span>
 
                         <router-link :to="`/book/${book.slug}`">
-                            <div class="profile-card-2"><img :src="`http://127.0.0.1:8000/media${book.thumbnail}`" class="img img-responsive">
+                            <div class="profile-card-2"><img :src="`https://api.bookeater.ir/media${book.thumbnail}`" class="img img-responsive" :alt="`${book.title}`" :title="`${book.title}`">
                                 <div class="book-name">{{book.title}}</div>
                                 <div class="mx-auto book-star">
                                 <span class="fw-bold ms-1 me-3">{{book.user_score}}</span>
@@ -64,7 +69,7 @@
                         
                             <div v-for="author in category.related_author" class="col-sm-4 col-6 text-center mb-3">
                                 <router-link :to="`/author/${author[1]}`" class="text-decoration-none">
-                                    <img class="rounded-circle mb-2 w-100" :src="`http://127.0.0.1:8000/media${author[2]}`" width="200px">
+                                    <img class="rounded-circle mb-2 w-100" :src="`https://api.bookeater.ir/media${author[2]}`" width="200px" :alt="`${author[0]}`" :title="`${author[0]}`">
                                     <strong class="text-warning d-block h5">{{author[0]}}</strong>
                                 </router-link>
                                 
@@ -77,13 +82,22 @@
             </div>
         </div>
     </div>
+
+    <div v-if="return404" class="PageNotFound bg-dark">
+        <div class="container text-center p-5">
+            <h1 class="text-muted" id="text-404">404</h1>
+            <p class="text-light">صفحه مورد نظر شما یافت نشد.</p>
+            <hr class="text-white">    
+        </div>
+    </div>
 </template>
 
 
 <script>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import { useMeta } from 'vue-meta'
 
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue';
@@ -129,6 +143,8 @@ export default {
 
         let rate_number = ref('')
 
+        let return404 = ref(false)
+
         function getData(){
             document.body.scrollTop = 0; // For Safari
             document.documentElement.scrollTop = 0;
@@ -139,21 +155,34 @@ export default {
             .then(response => {
                 category.value = response.data.category_data[0]
                 relatedBooks.value = response.data.books_data
+                return404.value = false
+                document.title  = category.value.title
             })
             .catch(error => {
+                return404.value = true
                 console.log(error.response);
             })
         }
         getData()
 
+        // meta tags
+        onMounted(() => {
+            setTimeout(setMetaDescription, 1000)
+            function setMetaDescription(){
+                let content = ref(document.getElementById('content_category').innerText)
+                content.value = content.value.substring(0,200)
+                content.value = content.value.replace(/(\r\n|\n|\r)/gm, "");
+                document.querySelector('meta[name="description"]').setAttribute("content", content.value);
+                document.querySelector('meta[name="og:description"]').setAttribute("content", content.value);
+            }
+        })
 
+        // take the book slug that user want to rate it
         function takeSlug(sl){
             slugForRate.value = sl
         }
-
-
-
-
+        
+        // making rate
         function sendRate(number, sl){
             rate_number.value = number
 
@@ -163,7 +192,8 @@ export default {
 				slug: slugForRate.value
 			})
 			.then(response => {
-				justGetData()
+				let target = ref(relatedBooks.value.filter((r) => r.slug == slugForRate.value))
+                target.value[0].user_score = rate_number.value
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -175,30 +205,14 @@ export default {
 
         }
 
-
-        function justGetData(){
-
-            axios
-            .post('ShowSingleCategory/', {
-                slug: slug.value
-            })
-            .then(response => {
-                category.value = response.data.category_data[0]
-                relatedBooks.value = response.data.books_data
-            })
-            .catch(error => {
-                console.log(error.response);
-            })
-        }
-
-
         function addOrRemoveFromReadlist(sl){
 			axios
 			.post('AddOrRemoveFromReadlist/', {
 				'slug': sl
 			})
 			.then(response => {
-				justGetData()
+				let target = ref(relatedBooks.value.filter((r) => r.slug == sl))
+                target.value[0].in_readlist = !target.value[0].in_readlist
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -224,6 +238,25 @@ export default {
             targetImage.style.transitionDuration = '0.3s';
         }
 
+        useMeta({
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه, دسته بندی های کتاب, برترین کتاب ها",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: `https://bookeater.ir/category/${route.params.slug}`,
+            'og:type': `${route.params.slug}-bookeater`,
+            'og:title': "bookeater",
+            'og:site_name': "کتاب خوار",
+            'og:url': `https://bookeater.ir/category/${route.params.slug}`,
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "کتاب خوار",
+            'twitter:description': "کتاب هایی با بیشترین نمره را در سایت کتاب خوار گرفته اند. شما نیز میتوانید یکی از رای دهندگان به این کتاب باشید.",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
+
 
 
         return {
@@ -231,6 +264,7 @@ export default {
             category,
             relatedBooks,
             swiperOptions,
+            return404,
             getData,
             takeSlug,
             sendRate,

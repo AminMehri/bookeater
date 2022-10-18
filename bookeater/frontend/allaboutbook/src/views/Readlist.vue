@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
     <div class="Readlist">
         <div class="container py-5">
             <div class="row text-center text-white mb-5">
@@ -10,7 +15,7 @@
             <!-- Modal star rating book -->
             <div class="modal fade w-100" id="staticBackdrop" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content bg-dark p-5">
+                    <div class="modal-content bg-dark p-sm-3 p-0">
                         <div class="modal-body mx-auto text-center">
                             <div class="mx-auto star-rating text-white fs-4">
                                 <span @click="sendRate(1)" class="fa fa-star"></span>
@@ -30,6 +35,17 @@
                 </div>
             </div>
 
+            <div class="row mb-4">
+                <div class="text-center">
+                    <p>مرتب کردن بر اساس:</p>
+                    <svg v-if=upToDown @click="upToDown = !upToDown" xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/></svg>
+                    <svg v-if=!upToDown @click="upToDown = !upToDown" xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/></svg>
+                    <span @click="filterScore()" class="btn btn-primary mb-2 mx-3">نمره</span>
+                    <span @click="filterRate()" class="btn btn-primary mb-2 ">رای</span>
+                    <span @click="filterUserRate()" class="btn btn-primary mb-2 mx-3">نمره کاربر</span>
+                </div>
+            </div>
+
 
             <div class="row">
                 <div class="col-lg-9 mx-auto">
@@ -46,16 +62,17 @@
                                     <div class="row g-0">
                                         <div class="col-md-8">
                                             <div class="card-body">
-                                                <h5 class="card-title d-inline ms-5">{{book.title}}</h5>
+                                                <h5 class="card-title d-inline ms-sm-5 ms-1 d-block d-sm-inline">{{book.title}}</h5>
                                                 <a @click="takeSlug(book.slug)" href="#" class="fa fa-star" data-bs-toggle="modal" data-bs-target="#staticBackdrop"></a>
-                                                <span class="fw-bold">{{book.user_score}}</span>
-                                                <span class="fa fa-star checked me-3"></span>
+                                                <span class="fw-bold" id="user_score">{{book.user_score}}</span>
+                                                <span class="me-3 text-muted">({{book.rates}})</span>
+                                                <span class="fa fa-star checked"></span>
                                                 <span class="fw-bold">{{book.score}}</span>
                                                 <span v-html="book.description" class="card-text d-block"></span>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <img :src="`http://127.0.0.1:8000/media${book.thumbnail}`" class="img-fluid rounded w-100" width="200px" alt="...">
+                                            <img :src="`https://api.bookeater.ir/media${book.thumbnail}`" class="img-fluid rounded w-100" width="200px" :alt="`${book.title}`" :title="`${book.title}`">
                                         </div>
                                     </div>
                                 </div>
@@ -76,10 +93,16 @@ import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
+import { useMeta } from 'vue-meta'
 
 export default {
-
     setup() {
+        useMeta({
+            title: "کتاب های خواندنی من | کتاب خوار",
+            robots: "noindex, nofollow",
+            googlebot: "noindex, nofollow",
+        });
+
         const store = useStore()
         const route = useRoute()
         const router = useRouter()
@@ -87,7 +110,6 @@ export default {
         let books = ref('')
 
         let slugForRate = ref('')
-
         let rate_number = ref('')
 
         function getData(){
@@ -104,14 +126,12 @@ export default {
         }
         getData()
 
-
+        // take the book slug that user want to rate it
         function takeSlug(sl){
             slugForRate.value = sl
         }
 
-
-
-
+        // making rate
         function sendRate(number, sl){
             rate_number.value = number
 
@@ -121,7 +141,8 @@ export default {
 				slug: slugForRate.value
 			})
 			.then(response => {
-				justGetData()
+                let target = ref(books.value.filter((r) => r.slug == slugForRate.value))
+                target.value[0].user_score = rate_number.value
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -133,27 +154,14 @@ export default {
 
         }
 
-
-        function justGetData(){
-            axios
-            .get('ShowReadList/')
-            .then(response => {
-                books.value = response.data.data
-                console.log(books.value);
-            })
-            .catch(error => {
-                console.log(error.response);
-            })
-        }
-
-
         function addOrRemoveFromReadlist(sl){
 			axios
 			.post('AddOrRemoveFromReadlist/', {
 				'slug': sl
 			})
 			.then(response => {
-				justGetData()
+                let target = ref(books.value.filter((r) => r.slug == sl))
+                target.value[0].in_readlist = !target.value[0].in_readlist
 			})
 			.catch(error => {
 				if(error.response.status == 401){
@@ -163,13 +171,57 @@ export default {
 			})
 		}
 
+        // book filter
+        let upToDown = ref(true)
+        function filterScore(){
+            upToDown.value = !upToDown.value
+            if(upToDown.value){
+                books.value.sort(function(a , b) {
+                    return b.score - a.score;
+                })
+            } else {
+                books.value.sort(function(a , b) {
+                    return a.score - b.score;
+                })
+            }
+        }
+
+        function filterRate(){
+            upToDown.value = !upToDown.value
+            if(upToDown.value){
+                books.value.sort(function(a , b) {
+                    return b.rates - a.rates;
+                })
+            } else {
+                books.value.sort(function(a , b) {
+                    return a.rates - b.rates;
+                })
+            }
+        }
+
+        function filterUserRate(){
+            upToDown.value = !upToDown.value
+            if(upToDown.value){
+                books.value.sort(function(a , b) {
+                    return b.user_score - a.user_score;
+                })
+            } else {
+                books.value.sort(function(a , b) {
+                    return a.user_score - b.user_score;
+                })
+            }
+        }
 
         return {
             books,
+            upToDown,
             getData,
             takeSlug,
             sendRate,
             addOrRemoveFromReadlist,
+            filterScore,
+            filterRate,
+            filterUserRate,
         };
     },
 };

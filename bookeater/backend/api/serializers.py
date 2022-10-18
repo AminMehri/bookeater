@@ -51,6 +51,11 @@ class GetProfileInformationSerializer(serializers.Serializer):
 
 
 
+class ReportSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    cause = serializers.CharField()
+
+
 # =============================
 # author panel serializers
 # =============================
@@ -62,6 +67,7 @@ class AddBookPanelSerializer(serializers.Serializer):
     category = serializers.ListField()
     description = serializers.CharField()
     content = serializers.CharField()
+    status = serializers.CharField()
     thumbnail = serializers.ImageField()
     image = serializers.ImageField()
 
@@ -73,6 +79,7 @@ class AddAuthorPanelSerializer(serializers.Serializer):
     category = serializers.ListField()
     description = serializers.CharField()
     content = serializers.CharField()
+    status = serializers.CharField()
     thumbnail = serializers.ImageField()
     image = serializers.ImageField()
 
@@ -84,6 +91,7 @@ class AddCategoryPanelSerializer(serializers.Serializer):
     author = serializers.ListField()
     description = serializers.CharField()
     content = serializers.CharField()
+    status = serializers.CharField()
     thumbnail = serializers.ImageField()
     image = serializers.ImageField()
 
@@ -93,6 +101,7 @@ class AddNewsPanelSerializer(serializers.Serializer):
     title = serializers.CharField()
     slug = serializers.SlugField()
     description = serializers.CharField()
+    status = serializers.CharField()
     content = serializers.CharField()
     image = serializers.ImageField()
 

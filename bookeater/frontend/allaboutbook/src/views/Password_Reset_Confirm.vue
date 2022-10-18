@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
     <div class="Password-reset-confirm">
         <div class="container">
             <div class="row">
@@ -30,10 +35,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref } from "vue";
 import axios from 'axios'
 import Swal from 'sweetalert2'
+import { useMeta } from 'vue-meta'
+
 
 
 export default {
 	setup() {
+        useMeta({
+            robots: "noindex, nofollow",
+            googlebot: "noindex, nofollow",
+        });
         const route = useRoute()
         const router = useRouter()
 

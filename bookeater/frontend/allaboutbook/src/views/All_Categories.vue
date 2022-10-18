@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+    
     <div class="row g-0">
         <div class="col-lg-8 col-md-9 col-sm-10 mx-auto mt-3">
 
@@ -6,7 +11,7 @@
                 <div class="card p-md-4 text-dark">
                     <div class="row g-0" id="category-card">
                         <div class="col-md-4">
-                            <img :src="`http://127.0.0.1:8000/media${category.thumbnail}`" class="img-fluid rounded-start">
+                            <img :src="`https://api.bookeater.ir/media${category.thumbnail}`" class="img-fluid rounded-start" :alt="`${category.title}`" :title="`${category.title}`">
                         </div>
                         <div class="col-md-8">
                             <div class="card-body">
@@ -29,9 +34,31 @@
 <script>
 import { ref } from "vue";
 import axios from 'axios'
+import { useMeta } from 'vue-meta'
 
-export default{
+export default {
     setup() {
+        useMeta({
+            title: "دسته بندی های کتاب | کتاب خوار",
+            description: "اطلاعاتی درباره تمام دسته بندی هایی در حوزه کتاب وجود دارند. شما میتوانید اطلاعات کامل هر یک از دسته بندی ها را در صفحه مخصوص دسته بندی مشاهده کنید.",
+            robots: "index, follow",
+            keywords: "کتاب خوار, کتاب, نویسنده, نقد کتاب, کتابخانه, دسته بندی های کتاب",
+            googlebot: "index, follow",
+            author: "امین مهری",
+            owner: "امین مهری",
+            canonical: "https://bookeater.ir/categories",
+            'og:type': "categories-bookeater",
+            'og:title': "bookeater",
+            'og:description': "اطلاعاتی درباره تمام دسته بندی هایی در حوزه کتاب وجود دارند. شما میتوانید اطلاعات کامل هر یک از دسته بندی ها را در صفحه مخصوص دسته بندی مشاهده کنید.",
+            'og:site_name': "کتاب خوار|نویسندگان",
+            'og:url': "https://bookeater.ir/categories",
+            'og:image': "https://bookeater.ir/media/image.jpg",
+            'twitter:title': "کتاب خوار|نویسندگان",
+            'twitter:description': "اطلاعاتی درباره تمام دسته بندی هایی در حوزه کتاب وجود دارند. شما میتوانید اطلاعات کامل هر یک از دسته بندی ها را در صفحه مخصوص دسته بندی مشاهده کنید.",
+            'twitter:site': "https://twitter.com/aminem_mehri",
+            'twitter:card': "Summary Card",
+            'twitter:image': "https://bookeater.ir/media/image.jpg",
+        });
 
         let categories = ref('')
 

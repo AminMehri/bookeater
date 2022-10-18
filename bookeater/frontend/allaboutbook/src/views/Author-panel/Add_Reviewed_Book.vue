@@ -1,100 +1,10 @@
 <template>
+
+    <div v-if="loading" class="fullscreen-loading">Loading&#8230;</div>
+
     <div class="row g-0">
 
-        <div class="col-sm-4 col-md-3 col-lg-2">
-            <sidebar class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidenav">
-
-                <router-link to="/author-panel" class="d-flex align-items-center mb-3 mb-md-0 text-white text-decoration-none">
-                    
-                    <span class="fs-4">کتاب خوار</span>
-                </router-link>
-                
-                <hr>
-
-                <ul class="nav nav-pills flex-column">
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center collapsed1" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse1">
-                                کتاب ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse1">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/books" class=" text-white" >کتاب ها</router-link></li>
-                                <li><router-link to="/author-panel/add-book/new-book" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center  collapsed2" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse2">
-                                نویسنده ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse2">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/authors" class=" text-white" >نویسنده ها</router-link></li>
-                                <li><router-link to="/author-panel/add-author/new-author" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center  collapsed3" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse3">
-                                دسته بندی ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse3">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/categories" class=" text-white" >دسته بندی ها</router-link></li>
-                                <li><router-link to="/author-panel/add-category/new-category" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center  collapsed4" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse4">
-                                نقد ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse4">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/reviewed-books" class=" text-white" >نقد ها</router-link></li>
-                                <li><router-link to="/author-panel/add-reviewed-book/new-reviewed-book" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center  collapsed5" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse5">
-                                خبر ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse5">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/news" class=" text-white" >خبر ها</router-link></li>
-                                <li><router-link to="/author-panel/add-news/new-news" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="nav-item text-dark">
-
-                        <button class="accordion-button p-2 bg-white text-dark nav-link align-items-center  collapsed6" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse6">
-                                قصار ها
-                        </button>
-                        <div class="collapse" id="dashboard-collapse6">
-                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><router-link to="/author-panel/quotes" class=" text-white" >قصار ها</router-link></li>
-                                <li><router-link to="/author-panel/add-quote" class=" text-white" >اضافه کردن</router-link></li>
-                            </ul>
-                        </div>
-                    </li>
-
-                </ul>
-                <hr>
-            </sidebar>
-        </div>
+        <Sidebar />
 
 
         <div class="col-sm-8 col-md-9 col-lg-10 p-3 mt-3">
@@ -155,8 +65,18 @@
                     </div>
                 </div>
 
+                <div class="col-md-6">
+                    <div class="input-group mb-3 align-items-center">
+                        <label for="id_status" class="form-label ms-3">وضعیت: </label>
+                        <select v-model="status" class="form-select" id="id_status">
+                            <option value="d">پیش نویس</option>
+                            <option value="s">ارسال به ادمین</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="col-12">
-                    <button @click="sendData()" class="btn btn-primary">ارسال به ادمین</button>
+                    <button @click="sendData()" class="btn btn-primary">تایید</button>
                 </div>
             </div>
         </div>
@@ -172,10 +92,14 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-
+import Sidebar from '@/components/Sidebar.vue'
 
 export default{
+    components: {
+        Sidebar
+    },
     setup() {
+        
         const store = useStore()
         const route = useRoute()
         const router = useRouter()
@@ -186,6 +110,7 @@ export default{
         let category= ref()
         let description= ref()
         let content= ref()
+        let status = ref()
 
         let authors = ref('')
 
@@ -195,9 +120,12 @@ export default{
 
         let slugForEdit = ref(route.params.slug) 
 
+        let loading = ref(false)
+
         if(slugForEdit.value == 'new-reviewed-book'){
             
         }else {
+            loading.value = true
             axios
             .post('ShowSingleReviewedBookEditPanel/', {
                 slug: slugForEdit.value
@@ -207,6 +135,7 @@ export default{
                 slug.value = response.data.data[0].slug
                 description.value = response.data.data[0].description
                 content.value = response.data.data[0].content
+                loading.value = false
             })
             .catch(error => {
                 if(error.response.status == 400 || error.response.status == 404){
@@ -229,6 +158,7 @@ export default{
                     })
                     router.push('/author-panel')
                 }
+                loading.value = false
             })
         }
 
@@ -257,6 +187,8 @@ export default{
 
 
         function sendData(){
+            loading.value = true
+
             let formData = new FormData()
             let thumbnailPic = document.getElementById('inputThumbnail')
             let imagePic = document.getElementById('inputImage')
@@ -267,6 +199,7 @@ export default{
             formData.append('category', category.value)
             formData.append('description', description.value)
             formData.append('content', content.value)
+            formData.append('status', status.value)
             formData.append('thumbnail', thumbnailPic.files[0])
             formData.append('image', imagePic.files[0])
 
@@ -281,6 +214,7 @@ export default{
                 slug.value = ''
                 description.value = ''
                 content.value = ''
+                loading.value = false
 
                 Swal.fire({
                     icon: 'success',
@@ -301,8 +235,19 @@ export default{
                     backdrop: false,
                     timer: 2500,
                     showConfirmButton: false,
-                })
+                    })
                 }
+
+                if(error.response.status == 400){
+                    Swal.fire({
+                    icon: 'warning',
+                    title: 'همشو پر کن دیوص کونی',
+                    backdrop: false,
+                    timer: 2500,
+                    showConfirmButton: false,
+                    })
+                }
+                loading.value = false
             })
         }
         
@@ -313,9 +258,11 @@ export default{
             category,
             description,
             content,
+            status,
             authors,
             categories,
             editor,
+            loading,
             getData,
             sendData,
         }

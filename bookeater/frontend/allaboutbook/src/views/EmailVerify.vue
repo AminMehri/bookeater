@@ -1,4 +1,9 @@
 <template>
+
+    <metainfo>
+      <template v-slot:title="{ content }">{{ content }}</template>
+    </metainfo>
+
     <!-- <p class="alert alert-danger">ایمیل شما تایید شد</p> -->
 </template>
 
@@ -9,10 +14,14 @@ import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios'
 import Swal from 'sweetalert2'
-
+import { useMeta } from 'vue-meta'
 
 export default {
-	setup() {
+    setup() {
+        useMeta({
+            robots: "noindex, nofollow",
+            googlebot: "noindex, nofollow",
+        });
         const store = useStore()
         const route = useRoute();
         const router = useRouter();
