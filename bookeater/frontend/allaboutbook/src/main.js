@@ -12,8 +12,8 @@ import CKEditor from '@ckeditor/ckeditor5-vue';
 import { createMetaManager } from 'vue-meta'
 
 
-// axios.defaults.baseURL = 'https://api.bookeater.ir';
-axios.defaults.baseURL = 'http://127.0.0.1:8000';
+axios.defaults.baseURL = 'https://api.bookeater.ir';
+// axios.defaults.baseURL = 'http://127.0.0.1:8000';
 
 createApp(App).use(store).use(router).use(VueSweetalert2).use(CKEditor).use(
     createMetaManager(false, {

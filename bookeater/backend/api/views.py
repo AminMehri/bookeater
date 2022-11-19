@@ -1,4 +1,7 @@
-from .models import *
+from .models import (User, Author, Quote, Category,
+                        Book, News, Reviewed_Book,
+                        Score, Comment, Like, Report
+                    )
 from . import models
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated 
@@ -14,10 +17,45 @@ from .permission import IsAuthor
 from jalali_date import datetime2jalali, date2jalali
 from django.db.models import Q
 
+base_url = 'https://bookeater.ir/'
 
 
-base_url = 'https://bookeater.ir/' 
+def check_for_readlist(authenticated, user_id, slug):
+    in_readlist = False
+    if(authenticated):
+        user = get_object_or_404(User, id=user_id)
+        if(user.readlist.filter(slug=slug)):
+            in_readlist = True
+    
+    return in_readlist
 
+
+def check_user_score(book_id, user_id):
+    user_score_queryset = Score.objects.filter(book=book_id).filter(user=user_id)
+    user_score = ''
+    for user in user_score_queryset:
+        user_score = user.user_score
+    
+    return user_score
+
+
+def delete_duplicated_item(data, another_data):
+    index = 0
+    for a in another_data:
+        if len(data) > 0:
+            if a.get('title') == data[0].get('title'):
+                del another_data[index]
+        
+        index += 1
+    
+    return another_data
+
+
+def writer_or_draft(item, username):
+    # for show item to authors, they must be the writer of the item or item status should be publish
+    if item.status == 'd' or item.status == 's':
+        if item.written_by.username != username:
+            return True
 
 
 
@@ -63,25 +101,19 @@ class ShowBestBooks(APIView):
 
     def get(self, request):
 
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
 
         books = Book.objects.filter(status='p').order_by('-score')
 
         data = []
         for book in books:
-            
-            # check : this book exit in readlist or not
-            in_readlist = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(slug=book.slug)):
-                    in_readlist = True
 
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
+            book_slug = book.slug
+            book_id = book.id
+
+            in_readlist = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
 
             data.append({
                 'title': book.title,
@@ -95,7 +127,6 @@ class ShowBestBooks(APIView):
                 'category': [a.title for a in book.category.filter(status='p')],
                 'author': [a.full_name for a in book.author.filter(status='p')],
             })
-            user_score = ''
         
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
 
@@ -123,26 +154,19 @@ class ShowMostRatedBooks(APIView):
 
     def get(self, request):
 
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
 
         books = Book.objects.filter(status='p').order_by('-rates')
 
         data = []
         for book in books:
 
-            # check : this book exit in readlist or not
-            in_readlist = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(slug=book.slug)):
-                    in_readlist = True
+            book_slug = book.slug
+            book_id = book.id
 
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
-            
+            in_readlist = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
             
             data.append({
                 'title': book.title,
@@ -154,7 +178,6 @@ class ShowMostRatedBooks(APIView):
                 'thumbnail': book.thumbnail.url,
                 'in_readlist': in_readlist,
             })
-            user_score = ''
         
         return Response({'status': 'ok', 'data': data}, status=status.HTTP_200_OK)
 
@@ -281,14 +304,7 @@ class ShowSingleNews(APIView):
                 'slug': n.slug,
             })
         
-        # delete duplicate news from another news
-        index = 0
-        for a in another_news_data:
-            if len(data) > 0:
-                if a.get('title') == data[0].get('title'):
-                    del another_news_data[index]
-            
-            index += 1
+        another_news_data = delete_duplicated_item(data, another_news_data)
 
         return Response({'status': 'ok', 'data': data, 'another_news_data': another_news_data}, status=status.HTTP_200_OK)
 
@@ -305,7 +321,8 @@ class ShowSingleBook(APIView):
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
 
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
 
         # just check for existing
         get_object_or_404(Book, slug=slug, status='p')   
@@ -315,18 +332,11 @@ class ShowSingleBook(APIView):
         data = []
         for book in books:
 
-            # check : this book exit in readlist or not
-            in_readlist1 = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(status='p', slug=book.slug)):
-                    in_readlist1 = True
+            book_slug = book.slug
+            book_id = book.id
 
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
+            in_readlist_for_detail_book = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
 
             data.append({
                 'title': book.title,
@@ -337,11 +347,10 @@ class ShowSingleBook(APIView):
                 'score': book.score,
                 'rates': book.rates,
                 'user_score': user_score,
-                'in_readlist': in_readlist1,
+                'in_readlist': in_readlist_for_detail_book,
                 'slug': book.slug,
                 'date': datetime2jalali(book.date).strftime('14%y/%m/%d _ %H:%M'),
             })
-            user_score = ''
         # end book_detail
         
         # related_book
@@ -354,18 +363,11 @@ class ShowSingleBook(APIView):
         related_books_data = []
         for book in books:
 
-            # check : this book exit in readlist or not
-            in_readlist2 = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(status='p', slug=book.slug)):
-                    in_readlist2 = True
+            book_slug = book.slug
+            book_id = book.id
 
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
+            in_readlist_for_related_book = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
             
             related_books_data.append({
                 'title': book.title,
@@ -373,18 +375,11 @@ class ShowSingleBook(APIView):
                 'user_score': user_score,
                 'slug': book.slug,
                 'thumbnail': book.thumbnail.url,
-                'in_readlist': in_readlist2
+                'in_readlist': in_readlist_for_related_book
             })
-            user_score = ''
         
-        # delete duplicate book from related book
-        index = 0
-        for a in related_books_data:
-            if len(data) > 0:
-                if a.get('title') == data[0].get('title'):
-                    del related_books_data[index]
-            
-            index += 1
+        related_books_data = delete_duplicated_item(data, related_books_data)
+        
         # end related_book
 
         # another book from this author
@@ -402,14 +397,8 @@ class ShowSingleBook(APIView):
                 'thumbnail': book.thumbnail.url,
             })
         
-        # delete duplicate book from another book from this author
-        index = 0
-        for a in author_books_data:
-            if len(data) > 0:
-                if a.get('title') == data[0].get('title'):
-                    del author_books_data[index]
-            
-            index += 1
+        author_books_data = delete_duplicated_item(data, author_books_data)
+        
         # end of another book from this author
 
         return Response({'status': 'ok', 'data': data, 'related_books_data': related_books_data, 'author_books_data': author_books_data}, status=status.HTTP_200_OK)
@@ -427,7 +416,8 @@ class ShowSingleCategory(APIView):
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
             
         category = get_object_or_404(Category, slug=slug, status='p')
 
@@ -437,18 +427,11 @@ class ShowSingleCategory(APIView):
         books_data = []
         for book in books:
 
-            # check : this book exit in readlist or not
-            in_readlist = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(status='p', slug=book.slug)):
-                    in_readlist = True
-            
-            # user score
-            user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
+            book_slug = book.slug
+            book_id = book.id
+
+            in_readlist = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
             
 
             books_data.append({
@@ -460,7 +443,6 @@ class ShowSingleCategory(APIView):
                 'thumbnail': book.thumbnail.url,
                 'in_readlist': in_readlist,
             })
-            user_score = ''
 
         # category information
         category_data = [{
@@ -550,14 +532,7 @@ class ShowSingleReviewedBook(APIView):
                 'slug': r.slug,
             })
         
-        # delete duplicate reviewed book from another reviewed book
-        index = 0
-        for a in related_reviewed_data:
-            if len(reviewed_books_data) > 0:
-                if a.get('title') == reviewed_books_data[0].get('title'):
-                    del related_reviewed_data[index]
-            
-            index += 1
+        related_reviewed_data = delete_duplicated_item(reviewed_books_data, related_reviewed_data)
 
         return Response({'status': 'ok', 'reviewed_books_data': reviewed_books_data, 'related_reviewed_data': related_reviewed_data}, status=status.HTTP_200_OK)
 
@@ -634,7 +609,8 @@ class ShowReadList(APIView):
 
     def get(self, request):
 
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
 
         username = self.request.user.username
         
@@ -644,18 +620,11 @@ class ShowReadList(APIView):
         for user in users:
             for book in user.readlist.filter(status='p'):
 
-                # check : this book exit in readlist or not
-                in_readlist = False
-                if(self.request.user.is_authenticated):
-                    user = get_object_or_404(User, id=id)
-                    if(user.readlist.filter(status='p', slug=book.slug)):
-                        in_readlist = True
+                book_slug = book.slug
+                book_id = book.id
 
-                # user score
-                user_score_queryset = Score.objects.filter(book=book.id).filter(user=id)
-                user_score = ''
-                for user in user_score_queryset:
-                    user_score = user.user_score
+                in_readlist = check_for_readlist(authenticated, user_id, book_slug)
+                user_score = check_user_score(book_id, user_id)
 
                 data.append({
                     'title': book.title,
@@ -667,7 +636,6 @@ class ShowReadList(APIView):
                     'rates': book.rates,
                     'in_readlist': in_readlist,
                 })
-                user_score = ''
 
         return Response({'status': 'ok', 'data': data, 'username': username}, status=status.HTTP_200_OK)
 
@@ -1010,7 +978,8 @@ class ShowUserVotes(APIView):
         else:
             return Response({'status': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
         
-        id = self.request.user.id
+        user_id = self.request.user.id
+        authenticated = self.request.user.is_authenticated
 
         user = get_object_or_404(User, username=username, public_score=True)
 
@@ -1019,19 +988,11 @@ class ShowUserVotes(APIView):
         data = []
         for score in scores:
 
-            # check : this book exit in readlist or not
-            in_readlist = False
-            if(self.request.user.is_authenticated):
-                user = get_object_or_404(User, id=id)
-                if(user.readlist.filter(status='p', slug=score.book.slug)):
-                    in_readlist = True
+            book_slug = score.book.slug
+            book_id = score.book.id
 
-            # user score
-            user_score_queryset = Score.objects.filter(book=score.book.id).filter(user=id)
-            user_score = ''
-            for user in user_score_queryset:
-                user_score = user.user_score
-
+            in_readlist = check_for_readlist(authenticated, user_id, book_slug)
+            user_score = check_user_score(book_id, user_id)
 
             data.append({
                 'title': score.book.title,
@@ -1044,7 +1005,6 @@ class ShowUserVotes(APIView):
                 'in_readlist': in_readlist,
                 'target_user_score': score.user_score
             })
-            user_score = ''
 
         return Response({'status': 'OK', 'data': data}, status=status.HTTP_200_OK) 
 
@@ -1193,11 +1153,8 @@ class ShowBooksPanel(APIView):
         data = []
         for book in books:
 
-            # for show book to author, he is must be the writer of the book or book status should be publish
-            if book.status == 'd' or book.status == 's':
-                if book.written_by.username != username:
-                    continue
-
+            if writer_or_draft(book, username):
+                continue
 
             data.append({
                 'title': book.title,
@@ -1227,10 +1184,8 @@ class ShowNewsPanel(APIView):
         data = []
         for n in news:
 
-            # for show book to author, he is must be the writer of the book or book status should be publish
-            if n.status == 'd' or n.status == 's':
-                if n.written_by.username != username:
-                    continue
+            if writer_or_draft(n, username):
+                continue
 
             data.append({
                 'title': n.title,
@@ -1258,10 +1213,8 @@ class ShowQuotesPanel(APIView):
         data = []
         for quote in quotes:
 
-            # for show book to author, he is must be the writer of the book or book status should be publish
-            if quote.status == 'd' or quote.status == 's':
-                if quote.written_by.username != username:
-                    continue
+            if writer_or_draft(quote, username):
+                continue
 
             data.append({
                 'author': quote.author,
@@ -1287,10 +1240,8 @@ class ShowCategoriesPanel(APIView):
         data = []
         for category in categories:
 
-            # for show book to author, he is must be the writer of the book or book status should be publish
-            if category.status == 'd' or category.status == 's':
-                if category.written_by.username != username:
-                    continue
+            if writer_or_draft(category, username):
+                continue
 
             data.append({
                 'title': category.title,
@@ -1317,10 +1268,8 @@ class ShowAuthorsPanel(APIView):
         data = []
         for author in authors:
 
-            # for show book to author, he is must be the writer of the book or book status should be publish
-            if author.status == 'd' or author.status == 's':
-                if author.written_by.username != username:
-                    continue
+            if writer_or_draft(author, username):
+                continue
 
             data.append({
                 'full_name': author.full_name,

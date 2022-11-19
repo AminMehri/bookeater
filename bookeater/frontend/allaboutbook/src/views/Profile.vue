@@ -4,10 +4,12 @@
       <template v-slot:title="{ content }">{{ content }}</template>
     </metainfo>
 
+    <div v-if="fullScreenLoadingLogout" class="fullscreen-loading">Loading&#8230;</div>
+
     <div class="container Profile">
         <div class="row g-3">
 
-            <div class="col-md-6 border p-4 mt-4 shadow">
+            <div v-if="!informationLoading" class="col-md-6 border p-4 mt-4 shadow">
 
                 <label for="inputUserName" class="form-label">نام کاربری</label>
                 <input type="text" class="form-control" id="inputUserName" disabled :value="`${username}`">
@@ -34,12 +36,15 @@
             </div>
 
             <div class="col-md-6">
-                <div class="card">
-                    
+                <div class="loadingInfo p-5">
+                    <InsideLoading v-if="informationLoading"/>
                 </div>
             </div>
     
         </div>
+
+        
+
 
         <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -115,14 +120,19 @@
 
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useStore } from 'vuex'
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import { useMeta } from 'vue-meta'
+import InsideLoading from '@/components/InsideLoading.vue'
 
 export default {
+    components: {
+		InsideLoading,
+	},
+
     setup() {
         useMeta({
             robots: "noindex, nofollow",
@@ -130,7 +140,6 @@ export default {
         });
 
         const store = useStore()
-        const route = useRoute();
         const router = useRouter();
 
         let username = ref('')
@@ -146,12 +155,18 @@ export default {
         let updateSex = ref('')
         let updateAge = ref('')
         let updatePublicScore = ref('')
+
+        let fullScreenLoadingLogout = ref(false)
+        let informationLoading = ref(false)
         
         // show profile information
         function getData(){
+            informationLoading.value = true
             axios
             .get('ShowProfile/')
             .then(response => {
+                informationLoading.value = false
+
                 username.value = response.data.data[0].username
                 email.value = response.data.data[0].email
                 fullName.value = response.data.data[0].full_name
@@ -179,6 +194,7 @@ export default {
             })
             .catch(error => {
                 console.log(error.response)
+                informationLoading.value = false
                 store.commit('logout')
                 router.push('/login')
             })
@@ -186,14 +202,17 @@ export default {
         getData()
 
         function doLogout() {
+            fullScreenLoadingLogout.value = true
             axios
             .post('dj-rest-auth/logout/')
             .then(response => {
+                fullScreenLoadingLogout.value = false
                 store.commit('logout')
                 router.push('/login')
             })
             .catch(error => {
                 console.log(error.response)
+                fullScreenLoadingLogout.value = false
             })
         }
 
@@ -209,8 +228,13 @@ export default {
             formData.append('age', updateAge.value)
             formData.append('sex', updateSex.value)
             formData.append('public_score', updatePublicScore.value)
-            formData.append('thumbnail', thumbnailPic.files[0])
-            formData.append('image', imagePic.files[0])
+            if(thumbnailPic.files[0]){
+                formData.append('thumbnail', thumbnailPic.files[0])
+            }
+
+            if(imagePic.files[0]){
+                formData.append('image', imagePic.files[0])
+            }
 
             axios
             .put('UpdateProfileInformation/', formData, {
@@ -259,6 +283,8 @@ export default {
             updateAge,
             updatePublicScore,
 
+            fullScreenLoadingLogout,
+
 			doLogout,
             getData,
             updateInfo,
@@ -270,3 +296,9 @@ export default {
 }
 
 </script>
+
+<style scoped>
+.loadingInfo{
+    height: 20rem;
+}
+</style>
