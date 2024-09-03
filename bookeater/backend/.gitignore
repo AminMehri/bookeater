@@ -4,3 +4,7 @@ nginx/key.pem
 venv
 venv/
 debugDB/.env
+media
+media/
+static/
+static
